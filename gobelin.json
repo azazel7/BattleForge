@@ -1,0 +1,89 @@
+[
+  {
+  "name" : "gobelin",
+  "entity_stats" : {
+    "ability" : {
+      "strength" : 8,
+      "dexterity" : 14,
+      "constitution" : 10,
+      "intelligence" : 10,
+      "wisdom" : 8,
+      "charisma" : 8
+    },
+    "saving_throw" : {
+      "strength" : 8,
+      "dexterity" : 14,
+      "constitution" : 10,
+      "intelligence" : 10,
+      "wisdom" : 8,
+      "charisma" : 8
+    },
+    "initiative" : 14,
+    "hp" : 7,
+    "armor_class" : 15
+  },
+  "team_id" : 0,
+  "actions" : [
+    {"Attack" : {"attack_modifier" : 4, "dammage": 5, "target_count" : 1}},
+    {"Attack" : {"attack_modifier" : 4, "dammage": 4, "target_count" : 1}}
+  ]
+},
+  {
+  "name" : "gobelin",
+  "entity_stats" : {
+    "ability" : {
+      "strength" : 8,
+      "dexterity" : 14,
+      "constitution" : 10,
+      "intelligence" : 10,
+      "wisdom" : 8,
+      "charisma" : 8
+    },
+    "saving_throw" : {
+      "strength" : 8,
+      "dexterity" : 14,
+      "constitution" : 10,
+      "intelligence" : 10,
+      "wisdom" : 8,
+      "charisma" : 8
+    },
+    "initiative" : 14,
+    "hp" : 7,
+    "armor_class" : 15
+  },
+  "team_id" : 0,
+  "actions" : [
+    {"Attack" : {"attack_modifier" : 4, "dammage": 5, "target_count" : 1}},
+    {"Attack" : {"attack_modifier" : 4, "dammage": 4, "target_count" : 1}}
+  ]
+},
+  {
+  "name" : "Black Bear",
+  "entity_stats" : {
+    "ability" : {
+      "strength" : 15,
+      "dexterity" : 10,
+      "constitution" : 14,
+      "intelligence" : 2,
+      "wisdom" : 12,
+      "charisma" : 7
+    },
+    "saving_throw" : {
+      "strength" : 15,
+      "dexterity" : 10,
+      "constitution" : 14,
+      "intelligence" : 2,
+      "wisdom" : 12,
+      "charisma" : 7
+    },
+    "initiative" : 10,
+    "hp" : 19,
+    "armor_class" : 11
+  },
+  "team_id" : 1,
+  "actions" : [
+    {"Attack" : {"attack_modifier" : 3, "dammage": 5, "target_count" : 1}},
+    {"Attack" : {"attack_modifier" : 3, "dammage": 6, "target_count" : 1}}
+  ]
+}
+]

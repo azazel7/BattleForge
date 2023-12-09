@@ -1,0 +1,13 @@
+- [ ] Include dices in dammages.
+- [ ] Build entities from template.
+- [ ] Use a database of entities.
+    - [ ] Build the database.
+    - [ ] Share fixed values between the template and the entities.
+- [ ] Make recursive actions.
+    - [ ] Action should contain a list of other actions
+- [ ] Have capacities that can be used a limited amount of time (potion, object)
+- [ ] Include spell + spell slot limit
+    - [ ] Modify the entitie that take an action
+- [ ] Add "advantage" and "disadvantage" on rolls
+- [ ] Use saving throw for spells
+    - [ ] Add function to roll saving throw
