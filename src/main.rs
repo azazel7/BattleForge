@@ -1,8 +1,7 @@
 use BattleForge::fight::Fight;
 use BattleForge::monster::Monster;
-use serde::{Deserialize, Serialize};
-use serde_json::{Result, Value};
-use std::collections::HashSet;
+use BattleForge::monster::MonsterBuilder;
+use BattleForge::monster::MonsterTemplate;
 use std::fs::File;
 use std::io::Read;
 
@@ -13,16 +12,14 @@ fn main() {
     let mut data = String::new();
     file.read_to_string(&mut data).unwrap();
 
-    println!("{data}");
+    let parsed: Vec<MonsterTemplate> = serde_json::from_str(&data).unwrap();
+    let builder = MonsterBuilder::new(parsed);
+    println!("{:?}", builder);
     let parsed: Vec<Monster> = serde_json::from_str(&data).unwrap();
     println!("{:?}", parsed);
     let mut fight = Fight::new(parsed);
-    let winner = fight.play();
-    println!("Winner is {winner:?}");
-}
-
-trait Action {
-    fn apply(m: &mut Monster);
+    // let winner = fight.play();
+    // println!("Winner is {winner:?}");
 }
 
 

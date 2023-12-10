@@ -1,5 +1,5 @@
+use crate::{event::Event, monster::Monster};
 use std::collections::HashSet;
-use crate::monster::Monster;
 
 pub struct Fight {
     entities: Vec<Monster>,
@@ -10,19 +10,43 @@ impl Fight {
     }
     pub fn advance_round(&mut self) {
         eprintln!("==== New Round ====");
+        //The loop for each entity's turn
         for idx in 0..self.entities.len() {
-            //TODO I'd like to be able to modify this entity for limited charge
-            let e = self.entities.get(idx).unwrap();
-            eprintln!("Playing {} {idx} (hp: {})", e.name(), e.hp());
-            if e.is_alive() {
-                eprintln!("Is alive");
-                let event = e.take_action(self);
-                self.entities
-                    .iter_mut()
-                    .enumerate()
-                    .filter(|(i, _)| event.is_target(*i as i8))
-                    .for_each(|(_, m)| event.run(m));
+            loop {
+                //TODO I'd like to be able to modify this entity for limited charge
+                let e = self.entities.get(idx).unwrap();
+                let mut event = None;
+                eprintln!("Playing {} {idx} (hp: {})", e.name(), e.hp());
+
+                {
+                    let is_alive = e.is_alive();
+                    if is_alive {
+                        eprintln!("Is alive");
+                        event = e.take_action(self);
+                    }
+                }
+                if let Some(event) = event {
+                    self.entities
+                        .iter_mut()
+                        .enumerate()
+                        .filter(|(i, _)| event.is_target(*i as i8))
+                        .for_each(|(_, m)| event.run(m));
+                } else {
+                    break;
+                }
             }
+
+            // eprintln!("Playing {} {idx} (hp: {})", e.name(), e.hp());
+            // if e.is_alive() {
+            //     eprintln!("Is alive");
+            //     while let Some(event) = e.take_action(self) {
+            //         self.entities
+            //             .iter_mut()
+            //             .enumerate()
+            //             .filter(|(i, _)| event.is_target(*i as i8))
+            //             .for_each(|(_, m)| event.run(m));
+            //     }
+            // }
         }
     }
     pub fn play(&mut self) -> Option<u8> {
@@ -55,4 +79,3 @@ impl Fight {
         &self.entities
     }
 }
-

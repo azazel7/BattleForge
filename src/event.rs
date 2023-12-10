@@ -42,7 +42,7 @@ impl Action for SimpleAttackAction {
 
 //https://serde.rs/enum-representations.html
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
-pub enum AA {
+pub enum ActionEnum {
     #[default]
     Nothing,
     Attack {
@@ -50,19 +50,16 @@ pub enum AA {
         dammage: i8,
         target_count: i8,
     },
-}
-pub struct Event {
-    action: AA,
-    targets: Vec<i8>,
-}
-impl Event {
-    pub fn new(action: AA, targets: Vec<i8>) -> Self {
-        Self { action, targets }
+    MultiAttack {
+        attacks : Vec<ActionEnum>,
     }
-    pub fn run(&self, target: &mut Monster) {
-        match self.action {
-            AA::Nothing => {}
-            AA::Attack {
+}
+impl Action for ActionEnum {
+    // add code here
+    fn apply(&self, target: &mut Monster) {
+        match &self {
+            ActionEnum::Nothing => {}
+            ActionEnum::Attack {
                 attack_modifier,
                 dammage,
                 target_count: _,
@@ -73,13 +70,54 @@ impl Event {
                 let hit = throw + attack_modifier;
                 eprintln!("Roll {throw}+{attack_modifier} = {hit}");
                 if throw >= target.ac() {
-                    target.decrease_hp(dammage);
+                    target.decrease_hp(*dammage);
                     eprintln!("Dammage {dammage} -> hp target : {}", target.hp());
                 }
+            },
+            ActionEnum::MultiAttack { attacks } => {
+                let mut rng = rand::thread_rng();
+                let die = Uniform::from(1..=20);
+                
             }
         }
     }
+    fn target_count(&self) -> i8 {
+
+        match &self {
+            ActionEnum::Nothing => 0,
+            ActionEnum::Attack {
+                attack_modifier,
+                dammage,
+                target_count,
+            } => {
+                *target_count
+            },
+            ActionEnum::MultiAttack { attacks } => {
+                1
+            }
+        }
+    }
+}
+pub struct Event {
+    action: ActionEnum,
+    targets: Vec<i8>,
+}
+impl Event {
+    pub fn new(action: ActionEnum, targets: Vec<i8>) -> Self {
+        Self { action, targets }
+    }
+    pub fn run(&self, target: &mut Monster) {
+        self.action.apply(target);
+    }
     pub fn is_target(&self, idx: i8) -> bool {
         self.targets.contains(&idx)
+    }
+}
+impl Default for Event{
+    fn default() -> Self {
+        Self {
+            action : ActionEnum::Nothing,
+            targets : Vec::new()
+        }
     }
 }
