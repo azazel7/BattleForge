@@ -1,4 +1,4 @@
-use crate::{event::*, fight::Fight, action::*};
+use crate::{action::*, event::*, fight::Fight};
 use core::cell::RefCell;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -74,13 +74,50 @@ impl Monster {
                 return Some(Event::new(action, targets));
             }
             ActionEnum::MultiAttack { attacks } => {
-                if let Some(idx) = *action_sequence {
-                    *action_sequence = Some(idx+1);
+                assert_ne!(attacks.len(), 0);
+                //NOTE improve this mess !
+                let action = if let Some(idx) = *action_sequence {
+                    // assert!(attacks[idx] != ActionEnum::MultiAttack);
+                    let action = &attacks[idx];
+                    if idx + 1 >= attacks.len() {
+                        *action_sequence = None;
+                    } else {
+                        *action_sequence = Some(idx + 1);
+                    }
+                    action
                 } else {
-                    *action_sequence = Some(1);
-                }
+                    let action = &attacks[0];
+                    if attacks.len() == 1 {
+                        *action_sequence = None;
+                    } else {
+                        *action_sequence = Some(1);
+                    }
+                    action
+                };
                 *action_used = true;
-                return None;
+                if let ActionEnum::Attack {
+                    attack_modifier: _,
+                    dammage: _,
+                    target_count,
+                } = action
+                {
+                    let targets = fight
+                        .get_entities()
+                        .iter()
+                        .enumerate()
+                        .filter_map(|(i, monster)| {
+                            if monster.team_id != self.team_id && monster.is_alive() {
+                                Some(i as i8)
+                            } else {
+                                None
+                            }
+                        })
+                        .take(*target_count as usize)
+                        .collect::<Vec<_>>();
+                    return Some(Event::new(action.clone(), targets));
+                } else {
+                    return None;
+                }
             }
         }
     }
