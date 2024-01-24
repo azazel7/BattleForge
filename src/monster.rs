@@ -1,9 +1,9 @@
-use crate::{action::*, event::*, fight::Fight};
+use crate::{action::*, event::*, fight::Fight, monster_template::*};
 use core::cell::RefCell;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug)]
 pub struct Monster {
     name: String,
     entity_stats: MonsterStats,
@@ -180,13 +180,6 @@ impl MonsterStats {
     pub fn armor_class(&self) -> i8 {
         self.armor_class
     }
-}
-
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
-pub struct MonsterTemplate {
-    name: String,
-    entity_stats: MonsterStats,
-    actions: Vec<ActionTemplate>,
 }
 
 #[derive(Default, Clone, Debug)]
