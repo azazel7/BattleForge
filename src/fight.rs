@@ -12,20 +12,24 @@ impl Fight {
         eprintln!("==== New Round ====");
         //The loop for each entity's turn
         for idx in 0..self.entities.len() {
+            {
+                //NOTE this thing *must* be *mut*
+                let mut e = self.entities.get_mut(idx).unwrap();
+                e.new_turn();
+            }
             loop {
                 //TODO I'd like to be able to modify this entity for limited charge
-                let e = self.entities.get(idx).unwrap();
+                let e: &Monster = self.entities.get(idx).unwrap();
                 let mut event = None;
-                eprintln!("Playing {} {idx} (hp: {})", e.name(), e.hp());
 
                 {
                     let is_alive = e.is_alive();
                     if is_alive {
-                        eprintln!("Is alive");
                         event = e.take_action(self);
                     }
                 }
                 if let Some(event) = event {
+                    eprintln!("Playing {} {idx} (hp: {})", e.name(), e.hp());
                     self.entities
                         .iter_mut()
                         .enumerate()
@@ -35,18 +39,6 @@ impl Fight {
                     break;
                 }
             }
-
-            // eprintln!("Playing {} {idx} (hp: {})", e.name(), e.hp());
-            // if e.is_alive() {
-            //     eprintln!("Is alive");
-            //     while let Some(event) = e.take_action(self) {
-            //         self.entities
-            //             .iter_mut()
-            //             .enumerate()
-            //             .filter(|(i, _)| event.is_target(*i as i8))
-            //             .for_each(|(_, m)| event.run(m));
-            //     }
-            // }
         }
     }
     pub fn play(&mut self) -> Option<u8> {
