@@ -1,4 +1,4 @@
-use crate::{action::*, fight::Fight, monster_template::*, resource::*};
+use crate::{action::*, dice::Dice, fight::Fight, monster_template::*, resource::*};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -31,6 +31,10 @@ impl Monster {
     }
     pub fn hp(&self) -> i8 {
         self.entity_stats.hp()
+    }
+    pub fn set_hp(&mut self, hp: i8) {
+        self.entity_stats.set_hp(hp);
+        self.entity_stats.set_max_hp(hp);
     }
     pub fn decrease_hp(&mut self, amount: i8) {
         self.entity_stats.decrease_hp(amount);
@@ -89,7 +93,7 @@ impl From<&MonsterTemplate> for Monster {
     fn from(template: &MonsterTemplate) -> Self {
         Self {
             name: template.name.clone(),
-            entity_stats: template.entity_stats.clone(),
+            entity_stats: MonsterStats::from(&template.entity_stats),
             team_id: 0,
             actions: template
                 .actions
@@ -101,7 +105,7 @@ impl From<&MonsterTemplate> for Monster {
     }
 }
 
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Stats {
     strength: i8,
     dexterity: i8,
@@ -119,9 +123,18 @@ pub struct MonsterStats {
     hp: i8,
     max_hp: i8,
 }
+
 impl MonsterStats {
     pub fn hp(&self) -> i8 {
         self.hp
+    }
+    pub fn set_max_hp(&mut self, amount: i8) {
+        self.max_hp = amount;
+        self.hp = self.hp.min(self.max_hp);
+    }
+    pub fn set_hp(&mut self, amount: i8) {
+        self.hp = amount;
+        self.max_hp = self.max_hp.max(self.hp);
     }
     pub fn decrease_hp(&mut self, amount: i8) {
         self.hp -= amount;
@@ -139,10 +152,25 @@ impl MonsterStats {
         self.armor_class
     }
 }
+impl From<&MonsterStatsTemplate> for MonsterStats {
+    fn from(template: &MonsterStatsTemplate) -> Self {
+        let dice = Dice::from(&template.hp);
+        let hp = dice.roll();
+        Self {
+            ability: template.ability,
+            saving_throw: template.saving_throw,
+            initiative: template.initiative,
+            armor_class: template.armor_class,
+            hp: hp as i8,
+            max_hp: hp as i8,
+        }
+    }
+}
 
 #[derive(Default, Clone, Debug)]
 pub struct MonsterBuilder {
     database: HashMap<String, MonsterTemplate>,
+    current_monster: Option<Monster>,
 }
 
 impl MonsterBuilder {
@@ -152,11 +180,34 @@ impl MonsterBuilder {
                 .into_iter()
                 .map(|template| (template.name.clone(), template))
                 .collect(),
+            current_monster: None,
         }
     }
-    pub fn build(&self, name: &str) -> Monster {
+    pub fn create(&mut self, name: &str) -> &mut MonsterBuilder {
         assert!(self.database.contains_key(name));
         let template = self.database.get(name).unwrap();
-        Monster::from(template)
+        self.current_monster = Some(Monster::from(template));
+        self
+    }
+    pub fn team(&mut self, team: i32) -> &mut MonsterBuilder {
+        assert!(self.current_monster.is_some());
+        if let Some(monster) = &mut self.current_monster {
+            monster.set_team(team as u8);
+        }
+        self
+    }
+    pub fn hp(&mut self, hp: i32) -> &mut MonsterBuilder {
+        assert!(self.current_monster.is_some());
+        if let Some(monster) = &mut self.current_monster {
+            monster.set_hp(hp as i8);
+        }
+        self
+    }
+    pub fn build(&mut self) -> Monster {
+        if let Some(monster) = self.current_monster.take().to_owned() {
+            monster
+        } else {
+            panic!("Error building a monster. No monster is being created");
+        }
     }
 }

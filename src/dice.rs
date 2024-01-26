@@ -1,6 +1,8 @@
 use rand::Rng;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
+use std::num::ParseIntError;
 
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct Dice {
@@ -47,5 +49,11 @@ impl From<&str> for Dice {
 impl From<&String> for Dice {
     fn from(item: &String) -> Self {
         Self::from(item.as_str())
+    }
+}
+impl FromStr for Dice {
+    type Err = ParseIntError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self::from(s))
     }
 }

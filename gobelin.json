@@ -19,11 +19,9 @@
       "charisma" : 8
     },
     "initiative" : 14,
-    "hp" : 7,
-    "max_hp" : 7,
+    "hp" : "2d6",
     "armor_class" : 15
   },
-  "team_id" : 0,
   "actions" : [
     {"Attack" : {"attack_modifier" : 4, "dammage": "1d6", "target_count" : 1}},
     {"Attack" : {"attack_modifier" : 4, "dammage": "1d6", "target_count" : 1}}
@@ -49,11 +47,9 @@
       "charisma" : 7
     },
     "initiative" : 10,
-    "hp" : 19,
-    "max_hp" : 19,
+    "hp" : "3d8",
     "armor_class" : 11
   },
-  "team_id" : 1,
   "actions" : [
     {"MultiAttack" : {
       "attacks" : 
