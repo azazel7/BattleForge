@@ -3,11 +3,11 @@ use crate::action::*;
 
 
 pub struct Event {
-    action: ActionEnum,
+    action: ActionStruct,
     targets: Vec<i8>,
 }
 impl Event {
-    pub fn new(action: ActionEnum, targets: Vec<i8>) -> Self {
+    pub fn new(action: ActionStruct, targets: Vec<i8>) -> Self {
         Self { action, targets }
     }
     pub fn run(&self, target: &mut Monster) {
@@ -20,7 +20,7 @@ impl Event {
 impl Default for Event {
     fn default() -> Self {
         Self {
-            action: ActionEnum::Nothing,
+            action: ActionStruct::default(),
             targets: Vec::new(),
         }
     }

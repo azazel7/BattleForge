@@ -1,12 +1,15 @@
-use crate::{event::Event, monster::Monster};
+use crate::{action::*, monster::Monster};
+use core::cell::RefCell;
 use std::collections::HashSet;
 
 pub struct Fight {
-    entities: Vec<Monster>,
+    entities: Vec<RefCell<Monster>>,
 }
 impl Fight {
     pub fn new(entities: Vec<Monster>) -> Self {
-        Self { entities }
+        Self {
+            entities: entities.into_iter().map(|e| RefCell::new(e)).collect(),
+        }
     }
     pub fn advance_round(&mut self) {
         eprintln!("==== New Round ====");
@@ -14,27 +17,35 @@ impl Fight {
         for idx in 0..self.entities.len() {
             {
                 //NOTE this thing *must* be *mut*
-                let mut e = self.entities.get_mut(idx).unwrap();
-                e.new_turn();
+                let e = self.entities.get(idx).unwrap();
+                e.borrow_mut().new_turn();
             }
             loop {
-                //TODO I'd like to be able to modify this entity for limited charge
-                let e: &Monster = self.entities.get(idx).unwrap();
-                let mut event = None;
-
+                let mut action = None;
                 {
+                    let mut e = self.entities.get(idx).unwrap().borrow_mut();
                     let is_alive = e.is_alive();
                     if is_alive {
-                        event = e.take_action(self);
+                        action = e.take_action(self);
+                        if action.is_some() {
+                            eprintln!("Playing {} {idx} (hp: {})", e.name(), e.hp());
+                        }
                     }
                 }
-                if let Some(event) = event {
-                    eprintln!("Playing {} {idx} (hp: {})", e.name(), e.hp());
-                    self.entities
-                        .iter_mut()
-                        .enumerate()
-                        .filter(|(i, _)| event.is_target(*i as i8))
-                        .for_each(|(_, m)| event.run(m));
+
+                if let Some(action) = action {
+                    for act in action.get_components() {
+                        let e = self.entities.get(idx).unwrap().borrow();
+                        let targets = e.get_targets(self, act);
+                        drop(e);
+                        //TODO what about the action that affect the fight (turn into a wolf, add
+                        //another monster or effect)
+                        self.entities
+                            .iter_mut()
+                            .enumerate()
+                            .filter(|(i, _)| targets.contains(i))
+                            .for_each(|(_, m)| act.apply(m.get_mut()));
+                    }
                 } else {
                     break;
                 }
@@ -61,13 +72,14 @@ impl Fight {
     }
     pub fn team_alive(&self, teams: &mut HashSet<u8>) {
         for e in self.entities.iter() {
+            let e = e.borrow();
             eprintln!("{} : {}", e.name(), e.hp());
             if e.is_alive() {
                 teams.insert(e.team());
             }
         }
     }
-    pub fn get_entities(&self) -> &Vec<Monster> {
+    pub fn get_entities(&self) -> &Vec<RefCell<Monster>> {
         &self.entities
     }
 }

@@ -1,5 +1,4 @@
-use crate::{action::*, event::*, fight::Fight, monster_template::*};
-use core::cell::RefCell;
+use crate::{action::*, fight::Fight, monster_template::*, resource::*};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -8,9 +7,8 @@ pub struct Monster {
     name: String,
     entity_stats: MonsterStats,
     team_id: u8,
-    actions: Vec<ActionEnum>,
-    action_sequence: RefCell<Option<usize>>,
-    action_used: RefCell<bool>,
+    actions: Vec<ActionStruct>,
+    resources: HashMap<Resource, i32>,
 }
 impl Monster {
     pub fn team(&self) -> u8 {
@@ -40,90 +38,51 @@ impl Monster {
     pub fn increase_hp(&mut self, amount: i8) {
         self.entity_stats.increase_hp(amount);
     }
-    pub fn take_action(&self, fight: &Fight) -> Option<Event> {
-        let mut action_sequence = self.action_sequence.borrow_mut();
-        let mut action_used = self.action_used.borrow_mut();
-
-        if *action_used && action_sequence.is_none() {
-            return None;
-        }
-        let action = self.actions.first().unwrap_or(&ActionEnum::Nothing).clone();
-        match action {
-            ActionEnum::Nothing => {
-                return None;
-            }
-            ActionEnum::Attack {
-                attack_modifier: _,
-                dammage: _,
-                target_count,
-            } => {
-                let targets = fight
-                    .get_entities()
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, monster)| {
-                        if monster.team_id != self.team_id && monster.is_alive() {
-                            Some(i as i8)
-                        } else {
-                            None
-                        }
-                    })
-                    .take(target_count as usize)
-                    .collect::<Vec<_>>();
-                *action_used = true;
-                return Some(Event::new(action, targets));
-            }
-            ActionEnum::MultiAttack { attacks } => {
-                assert_ne!(attacks.len(), 0);
-                //NOTE improve this mess !
-                let action = if let Some(idx) = *action_sequence {
-                    // assert!(attacks[idx] != ActionEnum::MultiAttack);
-                    let action = &attacks[idx];
-                    if idx + 1 >= attacks.len() {
-                        *action_sequence = None;
-                    } else {
-                        *action_sequence = Some(idx + 1);
-                    }
-                    action
+    pub fn get_targets(&self, fight: &Fight, action: &dyn Action) -> Vec<usize> {
+        let target_count = action.target_count() as usize;
+        fight
+            .get_entities()
+            .iter()
+            .enumerate()
+            .filter_map(|(i, monster)| {
+                let monster = monster.borrow();
+                if monster.team_id != self.team_id && monster.is_alive() {
+                    Some(i)
                 } else {
-                    let action = &attacks[0];
-                    if attacks.len() == 1 {
-                        *action_sequence = None;
-                    } else {
-                        *action_sequence = Some(1);
-                    }
-                    action
-                };
-                *action_used = true;
-                if let ActionEnum::Attack {
-                    attack_modifier: _,
-                    dammage: _,
-                    target_count,
-                } = action
-                {
-                    let targets = fight
-                        .get_entities()
-                        .iter()
-                        .enumerate()
-                        .filter_map(|(i, monster)| {
-                            if monster.team_id != self.team_id && monster.is_alive() {
-                                Some(i as i8)
-                            } else {
-                                None
-                            }
-                        })
-                        .take(*target_count as usize)
-                        .collect::<Vec<_>>();
-                    return Some(Event::new(action.clone(), targets));
-                } else {
-                    return None;
+                    None
                 }
-            }
+            })
+            .take(target_count as usize)
+            .collect::<Vec<_>>()
+    }
+    pub fn take_action(&mut self, fight: &Fight) -> Option<ActionStruct> {
+        let resources = &mut self.resources;
+
+        let available_action = self
+            .actions
+            .iter_mut()
+            .find(|action| action.is_available(&resources));
+        if let Some(action) = available_action {
+            action.consume_resources(resources);
+            action.use_charge();
+
+            return Some(action.clone());
+        } else {
+            None
         }
     }
     pub fn new_turn(&mut self) {
-        *self.action_sequence.borrow_mut() = None;
-        *self.action_used.borrow_mut() = false;
+        let resources = &mut self.resources;
+        resources.entry(Resource::Action).and_modify(|e| *e = 1);
+        resources
+            .entry(Resource::BonusAction)
+            .and_modify(|e| *e = 1);
+        resources
+            .entry(Resource::SneakAttack)
+            .and_modify(|e| *e = 1);
+        resources
+            .entry(Resource::SpellAction)
+            .and_modify(|e| *e = 1);
     }
 }
 impl From<&MonsterTemplate> for Monster {
@@ -135,10 +94,9 @@ impl From<&MonsterTemplate> for Monster {
             actions: template
                 .actions
                 .iter()
-                .map(|action_template| ActionEnum::from(action_template))
+                .map(|action_template| ActionStruct::from(action_template))
                 .collect(),
-            action_sequence: RefCell::new(None),
-            action_used: RefCell::new(false),
+            resources: HashMap::from([(Resource::Action, 1), (Resource::BonusAction, 1)]),
         }
     }
 }
