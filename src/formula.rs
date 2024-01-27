@@ -15,8 +15,8 @@ impl Formula {
         self.dice.roll() + self.fixed
     }
     pub fn is_formula(s: &str) -> bool {
-        let reg = Regex::new(r"([1-9][0-9]*)d([1-9][0-9]*)([+\-][1-9][0-9]*|)").unwrap();
-        reg.captures(s).is_some()
+        let reg = Regex::new(r"[1-9][0-9]*d[1-9][0-9]*([+\-][1-9][0-9]*|)").unwrap();
+        reg.find(s).is_some()
     }
 }
 impl From<&str> for Formula {
