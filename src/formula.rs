@@ -47,3 +47,36 @@ impl FromStr for Formula {
         Ok(Self::from(s))
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn from() {
+        let f = Formula::from("3d6");
+        assert_eq!(f.fixed, 0);
+        assert_eq!(f.dice.face_count(), 6);
+        assert_eq!(f.dice.dice_count(), 3);
+        let f = Formula::from("2d7+8");
+        assert_eq!(f.fixed, 8);
+        assert_eq!(f.dice.face_count(), 7);
+        assert_eq!(f.dice.dice_count(), 2);
+        let f = Formula::from("30d20-10");
+        assert_eq!(f.fixed, -10);
+        assert_eq!(f.dice.face_count(), 20);
+        assert_eq!(f.dice.dice_count(), 30);
+    }
+    #[test]
+    fn is_formula() {
+        assert!(Formula::is_formula("3d6"));
+        assert!(Formula::is_formula("123d6"));
+        assert!(Formula::is_formula("1d234"));
+        assert!(Formula::is_formula("23d4-1"));
+        assert!(Formula::is_formula("23d4-10"));
+        assert!(Formula::is_formula("23d4+17"));
+        assert!(Formula::is_formula("23d6+7"));
+        assert!(Formula::is_formula("06d6+7"));
+        assert!(Formula::is_formula("6d4+0"));
+        assert!(!Formula::is_formula("0d6+7"));
+        assert!(!Formula::is_formula("6d0+7"));
+    }
+}
