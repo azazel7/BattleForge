@@ -6,8 +6,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct Formula {
+    //TODO can be improved with more dices
     dice : Dice,
     fixed : i32,
+}
+impl Formula {
+    pub fn roll(&self) -> i32 {
+        self.dice.roll() + self.fixed
+    }
+    pub fn is_formula(s: &str) -> bool {
+        let reg = Regex::new(r"([1-9][0-9]*)d([1-9][0-9]*)([+\-][1-9][0-9]*|)").unwrap();
+        reg.captures(s).is_some()
+    }
 }
 impl From<&str> for Formula {
     fn from(item: &str) -> Self {
