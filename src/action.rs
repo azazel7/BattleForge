@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::dice::*;
+use crate::formula::Formula;
 use crate::monster::*;
 use crate::resource::Charge;
 use crate::resource::Resource;
@@ -20,7 +20,7 @@ pub trait Action {
 pub enum ActionComponent {
     Attack {
         attack_modifier: i8,
-        dammage: Dice,
+        dammage: Formula,
         target_count: i8,
     },
     MultiAttack {
@@ -91,7 +91,7 @@ impl Default for ActionComponent {
     fn default() -> Self {
         Self::Attack {
             attack_modifier: 0,
-            dammage: Dice::from("1d4"),
+            dammage: Formula::from("1d4"),
             target_count: 1,
         }
     }
@@ -154,7 +154,7 @@ impl From<&ActionTemplate> for ActionStruct {
             } => {
                 let component = ActionComponent::Attack {
                     attack_modifier: *attack_modifier,
-                    dammage: Dice::from(dammage),
+                    dammage: Formula::from(dammage),
                     target_count: *target_count,
                 };
                 ActionStruct {
@@ -173,7 +173,7 @@ impl From<&ActionTemplate> for ActionStruct {
                             target_count,
                         } => ActionComponent::Attack {
                             attack_modifier: *attack_modifier,
-                            dammage: Dice::from(dammage),
+                            dammage: Formula::from(dammage),
                             target_count: *target_count,
                         },
                         ActionTemplate::MultiAttack { .. } => {

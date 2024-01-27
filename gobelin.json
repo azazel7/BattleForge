@@ -47,7 +47,7 @@
       "charisma" : 7
     },
     "initiative" : 10,
-    "hp" : "3d8",
+    "hp" : "3d8+6",
     "armor_class" : 11
   },
   "actions" : [
