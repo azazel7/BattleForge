@@ -29,6 +29,10 @@ impl Dice {
         let reg = Regex::new(r"([1-9][0-9]*)d([1-9][0-9]*)").unwrap();
         reg.captures(s).is_some()
     }
+    pub fn add_dice(&mut self, amount: i32) {
+        self.dice_count += amount;
+        self.dice_count = self.dice_count.max(0);
+    }
     pub fn dice_count(&self) -> i32 {
         self.dice_count
     }
@@ -63,3 +67,4 @@ impl FromStr for Dice {
         Ok(Self::from(s))
     }
 }
+

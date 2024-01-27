@@ -1,18 +1,24 @@
 use crate::dice::Dice;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use std::num::ParseIntError;
 use std::str::FromStr;
-use serde::{Deserialize, Serialize};
 
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct Formula {
     //TODO can be improved with more dices
-    dice : Dice,
-    fixed : i32,
+    dice: Dice,
+    fixed: i32,
 }
 impl Formula {
     pub fn roll(&self) -> i32 {
         self.dice.roll() + self.fixed
+    }
+    pub fn add_dice(&mut self, amount: i32) {
+        self.dice.add_dice(amount);
+    }
+    pub fn add_fixed(&mut self, amount: i32) {
+        self.fixed += amount;
     }
     pub fn is_formula(s: &str) -> bool {
         let reg = Regex::new(r"[1-9][0-9]*d[1-9][0-9]*([+\-][1-9][0-9]*|)").unwrap();
@@ -28,8 +34,8 @@ impl From<&str> for Formula {
         if let Some(capture) = reg_fixed.captures(item) {
             let fixed = capture.get(1).unwrap().as_str().parse::<i32>().unwrap_or(0);
             Self {
-                dice : Dice::from(item),
-                fixed, 
+                dice: Dice::from(item),
+                fixed,
             }
         } else {
             panic!("The Formula string has the wrong format : {item}");
