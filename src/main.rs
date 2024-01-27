@@ -2,7 +2,8 @@ use std::fs::File;
 use std::io::Read;
 use BattleForge::fight::Fight;
 use BattleForge::monster::MonsterBuilder;
-use BattleForge::monster_template::MonsterTemplate;
+use BattleForge::template::MonsterTemplate;
+use BattleForge::resource::{Charge, Resource};
 
 fn main() {
     let mut file = File::open("gobelin.json").unwrap();

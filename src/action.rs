@@ -4,6 +4,7 @@ use crate::formula::Formula;
 use crate::monster::*;
 use crate::resource::Charge;
 use crate::resource::Resource;
+use crate::template::ActionTemplate;
 use rand::distributions::{Distribution, Uniform};
 use serde::{Deserialize, Serialize};
 
@@ -96,7 +97,7 @@ impl Default for ActionComponent {
         }
     }
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ActionStruct {
     charges: Charge,
     resources: Vec<Resource>,
@@ -196,31 +197,6 @@ impl Default for ActionStruct {
             charges: Charge::Infinite,
             resources: vec![Resource::Action],
             components: vec![],
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum ActionTemplate {
-    Attack {
-        attack_modifier: i8,
-        dammage: String,
-        target_count: i8,
-    },
-    MultiAttack {
-        attacks: Vec<ActionTemplate>,
-    },
-    // Spell {
-    //     name: String,
-    //     lvl: i32,
-    // },
-}
-impl Default for ActionTemplate {
-    fn default() -> Self {
-        Self::Attack {
-            attack_modifier: 0,
-            dammage: "1d4".to_string(),
-            target_count: 1,
         }
     }
 }

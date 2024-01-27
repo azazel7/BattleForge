@@ -8,10 +8,7 @@ pub enum Resource {
     SneakAttack,
     SpellAction,
     Ki,
-    Spell1,
-    Spell2,
-    Spell3,
-    Spell4,
+    Spell(i32),
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Hash, Serialize, Deserialize)]

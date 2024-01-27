@@ -1,4 +1,5 @@
-use crate::{action::*, fight::Fight, monster_template::*, resource::*, formula::Formula};
+use crate::{action::*, fight::Fight, template::*, resource::*, formula::Formula};
+use crate::template::MonsterStatsTemplate;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
