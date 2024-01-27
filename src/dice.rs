@@ -1,8 +1,8 @@
 use rand::Rng;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 use std::num::ParseIntError;
+use std::str::FromStr;
 
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct Dice {
@@ -28,6 +28,12 @@ impl Dice {
     pub fn is_dice(s: &str) -> bool {
         let reg = Regex::new(r"([1-9][0-9]*)d([1-9][0-9]*)").unwrap();
         reg.captures(s).is_some()
+    }
+    pub fn dice_count(&self) -> i32 {
+        self.dice_count
+    }
+    pub fn face_count(&self) -> i32 {
+        self.face_count
     }
 }
 
