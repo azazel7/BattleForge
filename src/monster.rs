@@ -170,14 +170,14 @@ impl From<&MonsterStatsTemplate> for MonsterStats {
 
 #[derive(Default, Clone, Debug)]
 pub struct MonsterBuilder {
-    database: HashMap<String, MonsterTemplate>,
+    monster_database: HashMap<String, MonsterTemplate>,
     current_monster: Option<Monster>,
 }
 
 impl MonsterBuilder {
     pub fn new(monsters: Vec<MonsterTemplate>) -> Self {
         Self {
-            database: monsters
+            monster_database: monsters
                 .into_iter()
                 .map(|template| (template.name.clone(), template))
                 .collect(),
@@ -185,8 +185,8 @@ impl MonsterBuilder {
         }
     }
     pub fn create(&mut self, name: &str) -> &mut MonsterBuilder {
-        assert!(self.database.contains_key(name));
-        let template = self.database.get(name).unwrap();
+        assert!(self.monster_database.contains_key(name));
+        let template = self.monster_database.get(name).unwrap();
         self.current_monster = Some(Monster::from(template));
         self
     }
