@@ -27,6 +27,9 @@ impl Formula {
         let reg = Regex::new(r"^([+\-]?[0-9]+)$|^[0-9]+d[1-9][0-9]*([+\-][0-9]*|)").unwrap();
         reg.find(s).is_some()
     }
+    pub fn average_roll(&self) -> f32 {
+        self.dice.average_roll() + self.fixed as f32
+    }
 }
 impl From<&str> for Formula {
     fn from(item: &str) -> Self {

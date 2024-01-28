@@ -40,6 +40,9 @@ impl Dice {
     pub fn face_count(&self) -> i32 {
         self.face_count
     }
+    pub fn average_roll(&self) -> f32 {
+        (self.dice_count * self.face_count) as f32 / 2.0
+    }
 }
 
 impl From<&str> for Dice {

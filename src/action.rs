@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::float::F32;
 use crate::formula::Formula;
 use crate::monster::*;
 use crate::resource::Charge;
@@ -43,6 +44,16 @@ impl ActionComponent {
         }
     }
     pub fn set_save_dc(&mut self, save_dc: i32) {}
+    pub fn average_dammage(&self) -> f32 {
+        match self {
+            ActionComponent::Nothing => 0.0,
+            ActionComponent::Attack {
+                attack_modifier: _,
+                dammage,
+                target_count,
+            } => dammage.average_roll(),
+        }
+    }
 }
 impl Action for ActionComponent {
     // add code here
@@ -242,6 +253,12 @@ impl ActionStruct {
     }
     pub fn add_component(&mut self, component: ActionComponent) {
         self.components.push(component);
+    }
+    pub fn average_dammage(&self) -> f32 {
+        self.components
+            .iter()
+            .map(|component| component.average_dammage())
+            .sum()
     }
 }
 impl Action for ActionStruct {

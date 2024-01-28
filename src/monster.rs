@@ -1,5 +1,5 @@
 use crate::template::MonsterStatsTemplate;
-use crate::{action::*, fight::Fight, resource::*, template::*};
+use crate::{action::*, fight::Fight, float::*, resource::*, template::*};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::iter::once;
@@ -97,10 +97,17 @@ impl Monster {
     pub fn take_action(&mut self, fight: &Fight) -> Option<ActionStruct> {
         let resources = &mut self.resources;
 
-        let available_action = self.actions.iter_mut().find(|action| {
-            println!("{} -> {resources:?} - {action:?}", self.name);
-            action.is_available(&resources)
-        });
+        let available_action = self
+            .actions
+            .iter_mut()
+            .filter_map(|action| {
+                if action.is_available(&resources) {
+                    Some(action)
+                } else {
+                    None
+                }
+            })
+            .max_by(|a, b| F32(a.average_dammage()).cmp(&F32(b.average_dammage())));
         if let Some(action) = available_action {
             action.consume_resources(resources);
             action.use_charge();

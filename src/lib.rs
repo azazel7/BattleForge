@@ -7,3 +7,4 @@ pub mod action;
 pub mod resource;
 pub mod formula;
 pub mod template;
+pub mod float;
