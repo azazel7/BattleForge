@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use BattleForge::fight::Fight;
-use BattleForge::monster::MonsterBuilder;
+use BattleForge::template::TemplateBuilder;
 use BattleForge::template::MonsterTemplate;
 use BattleForge::template::SpellTemplate;
 use BattleForge::resource::{Charge, Resource};
@@ -28,9 +28,10 @@ fn main() {
     file.read_to_string(&mut data).unwrap();
     let spell_database: HashMap<String, SpellTemplate> = serde_json::from_str(&data).unwrap();
     println!("{:?}", spell_database);
+    // println!("{:?}", monster_database);
 
 
-    let mut builder = MonsterBuilder::new(monster_database);
+    let mut builder = TemplateBuilder::new(monster_database);
     //TODO change their team
     let monsters = vec![
         builder.create("Gobelin").hp(7).team(0).build(),
