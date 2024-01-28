@@ -14,6 +14,8 @@ fn main() {
     println!("{}", j);
     let j = serde_json::to_string(&Resource::Action).unwrap();
     println!("{}", j);
+    let j = serde_json::to_string(&(1, Resource::Action)).unwrap();
+    println!("{}", j);
 
 
     let mut file = File::open("gobelin.json").unwrap();
