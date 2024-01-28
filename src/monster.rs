@@ -1,4 +1,4 @@
-use crate::{action::*, fight::Fight, template::*, resource::*, formula::Formula};
+use crate::{action::*, fight::Fight, template::*, resource::*};
 use crate::template::MonsterStatsTemplate;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -155,8 +155,7 @@ impl MonsterStats {
 }
 impl From<&MonsterStatsTemplate> for MonsterStats {
     fn from(template: &MonsterStatsTemplate) -> Self {
-        let formula = Formula::from(&template.hp);
-        let hp = formula.roll();
+        let hp = template.hp.roll();
         Self {
             ability: template.ability,
             saving_throw: template.saving_throw,

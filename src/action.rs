@@ -4,6 +4,7 @@ use crate::formula::Formula;
 use crate::monster::*;
 use crate::resource::Charge;
 use crate::resource::Resource;
+use crate::utils::*;
 use crate::template::ActionTemplate;
 use rand::distributions::{Distribution, Uniform};
 use serde::{Deserialize, Serialize};
@@ -21,6 +22,7 @@ pub trait Action {
 pub enum ActionComponent {
     Attack {
         attack_modifier: i8,
+        #[serde(deserialize_with = "string_or_struct")]
         dammage: Formula,
         target_count: i8,
     },
@@ -155,7 +157,7 @@ impl From<&ActionTemplate> for ActionStruct {
             } => {
                 let component = ActionComponent::Attack {
                     attack_modifier: *attack_modifier,
-                    dammage: Formula::from(dammage),
+                    dammage: *dammage,
                     target_count: *target_count,
                 };
                 ActionStruct {
@@ -174,7 +176,7 @@ impl From<&ActionTemplate> for ActionStruct {
                             target_count,
                         } => ActionComponent::Attack {
                             attack_modifier: *attack_modifier,
-                            dammage: Formula::from(dammage),
+                            dammage: *dammage,
                             target_count: *target_count,
                         },
                         ActionTemplate::MultiAttack { .. } => {

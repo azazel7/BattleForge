@@ -1,5 +1,6 @@
-use crate::monster::*;
+use crate::{monster::*, formula::Formula};
 use serde::{Deserialize, Serialize};
+use crate::utils::*;
 
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct MonsterStatsTemplate {
@@ -7,6 +8,7 @@ pub struct MonsterStatsTemplate {
     pub saving_throw: Stats,
     pub initiative: i8,
     pub armor_class: i8,
-    pub hp: String,
+    #[serde(deserialize_with = "string_or_struct")]
+    pub hp: Formula,
 }
 

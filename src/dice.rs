@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Dice {
     dice_count: i32,
     face_count: i32,
@@ -26,7 +26,7 @@ impl Dice {
         sum
     }
     pub fn is_dice(s: &str) -> bool {
-        let reg = Regex::new(r"([1-9][0-9]*)d([1-9][0-9]*)").unwrap();
+        let reg = Regex::new(r"[0-9]+d([1-9][0-9]*)").unwrap();
         reg.captures(s).is_some()
     }
     pub fn add_dice(&mut self, amount: i32) {
@@ -43,7 +43,7 @@ impl Dice {
 
 impl From<&str> for Dice {
     fn from(item: &str) -> Self {
-        let reg = Regex::new(r"([1-9][0-9]*)d([1-9][0-9]*)").unwrap();
+        let reg = Regex::new(r"([0-9]+)d([1-9][0-9]*)").unwrap();
         if let Some(capture) = reg.captures(item) {
             let dice_count = capture.get(1).unwrap().as_str().parse::<i32>().unwrap();
             let face_count = capture.get(2).unwrap().as_str().parse::<i32>().unwrap();

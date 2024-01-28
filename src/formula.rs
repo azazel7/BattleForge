@@ -3,10 +3,13 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::num::ParseIntError;
 use std::str::FromStr;
+use crate::utils::*;
 
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+
+#[derive(Default, Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Formula {
     //TODO can be improved with more dices
+    #[serde(deserialize_with = "string_or_struct")]
     dice: Dice,
     fixed: i32,
 }
@@ -21,7 +24,7 @@ impl Formula {
         self.fixed += amount;
     }
     pub fn is_formula(s: &str) -> bool {
-        let reg = Regex::new(r"[1-9][0-9]*d[1-9][0-9]*([+\-][1-9][0-9]*|)").unwrap();
+        let reg = Regex::new(r"[0-9]+d[1-9][0-9]*([+\-][0-9]*|)").unwrap();
         reg.find(s).is_some()
     }
 }
@@ -30,7 +33,7 @@ impl From<&str> for Formula {
         /*
          * Regex capture 3d6+2, 3d6-2, 3d6
          */
-        let reg_fixed = Regex::new(r"[1-9][0-9]*d[1-9][0-9]*([+\-][1-9][0-9]*|)").unwrap();
+        let reg_fixed = Regex::new(r"[0-9]+d[1-9][0-9]*([+\-][0-9]*|)").unwrap();
         if let Some(capture) = reg_fixed.captures(item) {
             let fixed = capture.get(1).unwrap().as_str().parse::<i32>().unwrap_or(0);
             Self {
@@ -53,6 +56,7 @@ impl FromStr for Formula {
         Ok(Self::from(s))
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -82,7 +86,8 @@ mod tests {
         assert!(Formula::is_formula("23d6+7"));
         assert!(Formula::is_formula("06d6+7"));
         assert!(Formula::is_formula("6d4+0"));
-        assert!(!Formula::is_formula("0d6+7"));
+        assert!(Formula::is_formula("0d6+7"));
+        assert!(Formula::is_formula("0d6+0"));
         assert!(!Formula::is_formula("6d0+7"));
     }
 }

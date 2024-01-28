@@ -1,4 +1,5 @@
 
+pub mod utils;
 pub mod fight;
 pub mod monster;
 pub mod dice;
