@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::template::MonsterTemplate;
+use crate::template::{MonsterTemplate, FromTemplate};
 use crate::monster::Monster;
 
 #[derive(Default, Clone, Debug)]
@@ -21,7 +21,7 @@ impl TemplateBuilder {
     pub fn create(&mut self, name: &str) -> &mut Self {
         assert!(self.monster_database.contains_key(name));
         let template = self.monster_database.get(name).unwrap();
-        self.current_monster = Some(Monster::from(template));
+        self.current_monster = Some(Monster::from_template(self, template));
         self
     }
     pub fn team(&mut self, team: i32) -> &mut Self {

@@ -90,16 +90,16 @@ impl Monster {
             .and_modify(|e| *e = 1);
     }
 }
-impl From<&MonsterTemplate> for Monster {
-    fn from(template: &MonsterTemplate) -> Self {
+impl FromTemplate<&MonsterTemplate> for Monster {
+    fn from_template(builder: &TemplateBuilder, template: &MonsterTemplate) -> Self {
         Self {
             name: template.name.clone(),
-            entity_stats: MonsterStats::from(&template.entity_stats),
+            entity_stats: MonsterStats::from_template(builder, &template.entity_stats),
             team_id: 0,
             actions: template
                 .actions
                 .iter()
-                .map(|action_template| ActionStruct::from(action_template))
+                .map(|action_template| ActionStruct::from_template(builder, action_template))
                 .collect(),
             resources: HashMap::from([(Resource::Action, 1), (Resource::BonusAction, 1)]),
         }
@@ -153,8 +153,8 @@ impl MonsterStats {
         self.armor_class
     }
 }
-impl From<&MonsterStatsTemplate> for MonsterStats {
-    fn from(template: &MonsterStatsTemplate) -> Self {
+impl FromTemplate<&MonsterStatsTemplate> for MonsterStats {
+    fn from_template(builder: &TemplateBuilder, template: &MonsterStatsTemplate) -> Self {
         let hp = template.hp.roll();
         Self {
             ability: template.ability,

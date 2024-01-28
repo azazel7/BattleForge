@@ -4,6 +4,8 @@ use crate::formula::Formula;
 use crate::monster::*;
 use crate::resource::Charge;
 use crate::resource::Resource;
+use crate::template::TemplateBuilder;
+use crate::template::FromTemplate;
 use crate::utils::*;
 use crate::template::ActionTemplate;
 use rand::distributions::{Distribution, Uniform};
@@ -139,8 +141,8 @@ impl Action for ActionStruct {
         }
     }
 }
-impl From<&ActionTemplate> for ActionStruct {
-    fn from(template: &ActionTemplate) -> Self {
+impl FromTemplate<&ActionTemplate> for ActionStruct {
+    fn from_template(builder: &TemplateBuilder, template: &ActionTemplate) -> Self {
         match template {
             ActionTemplate::Attack {
                 attack_modifier,
