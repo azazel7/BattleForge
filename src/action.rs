@@ -173,6 +173,9 @@ impl From<&ActionTemplate> for ActionStruct {
                         },
                         ActionTemplate::MultiAttack { .. } => {
                             unreachable!("MultiAttack cannot be nested in the database.");
+                        },
+                        ActionTemplate::Spell { .. } => {
+                            unreachable!("Spell cannot be in MultiAttack.");
                         }
                     })
                     .collect();
@@ -181,6 +184,9 @@ impl From<&ActionTemplate> for ActionStruct {
                     resources: vec![Resource::Action],
                     components,
                 }
+            }
+            ActionTemplate::Spell { name } => {
+                todo!("ActionTemplate::Spell to ActionStruct");
             }
         }
     }

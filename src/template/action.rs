@@ -14,10 +14,9 @@ pub enum ActionTemplate {
     MultiAttack {
         attacks: Vec<ActionTemplate>,
     },
-    // Spell {
-    //     name: String,
-    //     lvl: i32,
-    // },
+    Spell {
+        name: String,
+    },
 }
 impl Default for ActionTemplate {
     fn default() -> Self {
