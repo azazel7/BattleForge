@@ -26,9 +26,6 @@ pub enum ActionComponent {
         dammage: Formula,
         target_count: i8,
     },
-    MultiAttack {
-        attacks: Vec<ActionComponent>,
-    },
 }
 
 impl Action for ActionComponent {
@@ -54,20 +51,15 @@ impl Action for ActionComponent {
                     eprintln!("Dammage {dmg} -> hp target : {}", target.hp());
                 }
             }
-            ActionComponent::MultiAttack { attacks } => {
-                let mut rng = rand::thread_rng();
-                let die = Uniform::from(1..=20);
-            }
         }
     }
     fn target_count(&self) -> usize {
         match &self {
             ActionComponent::Attack {
-                attack_modifier,
-                dammage,
+                attack_modifier: _,
+                dammage: _,
                 target_count,
             } => *target_count as usize,
-            ActionComponent::MultiAttack { attacks } => 1,
         }
     }
     fn consume_resources(&self, resources: &mut HashMap<Resource, i32>) {
