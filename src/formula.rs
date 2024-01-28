@@ -3,6 +3,7 @@ use crate::utils::*;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::num::ParseIntError;
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use std::str::FromStr;
 
 #[derive(Default, Clone, Copy, Debug, Serialize, Deserialize)]
@@ -57,6 +58,51 @@ impl FromStr for Formula {
     type Err = ParseIntError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self::from(s))
+    }
+}
+impl Add for Formula {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        Self {
+            dice: self.dice + other.dice,
+            fixed: self.fixed + other.fixed,
+        }
+    }
+}
+impl AddAssign for Formula {
+    fn add_assign(&mut self, other: Self) {
+        self.dice += other.dice;
+        self.fixed += other.fixed;
+    }
+}
+impl Sub for Formula {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self {
+        Self {
+            dice: self.dice - other.dice,
+            fixed: self.fixed - other.fixed,
+        }
+    }
+}
+impl SubAssign for Formula {
+    fn sub_assign(&mut self, other: Self) {
+        self.dice -= other.dice;
+        self.fixed -= other.fixed;
+    }
+}
+impl Mul<i32> for Formula {
+    type Output = Self;
+    fn mul(self, other: i32) -> Self {
+        Self {
+            dice: self.dice * other,
+            fixed: self.fixed * other,
+        }
+    }
+}
+impl MulAssign<i32> for Formula {
+    fn mul_assign(&mut self, other: i32) {
+        self.dice *= other;
+        self.fixed *= other;
     }
 }
 

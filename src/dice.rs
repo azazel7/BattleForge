@@ -2,6 +2,7 @@ use rand::Rng;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::num::ParseIntError;
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use std::str::FromStr;
 
 #[derive(Default, Clone, Copy, Debug, Serialize, Deserialize)]
@@ -67,4 +68,52 @@ impl FromStr for Dice {
         Ok(Self::from(s))
     }
 }
-
+impl Add for Dice {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        assert_eq!(self.face_count, other.face_count);
+        Self {
+            face_count: self.face_count,
+            dice_count: self.dice_count + other.dice_count,
+        }
+    }
+}
+impl AddAssign for Dice {
+    fn add_assign(&mut self, other: Self) {
+        assert_eq!(self.face_count, other.face_count);
+        self.dice_count += other.dice_count;
+    }
+}
+impl Sub for Dice {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self {
+        assert_eq!(self.face_count, other.face_count);
+        Self {
+            face_count: self.face_count,
+            dice_count: (self.dice_count - other.dice_count).max(0),
+        }
+    }
+}
+impl SubAssign for Dice {
+    fn sub_assign(&mut self, other: Self) {
+        assert_eq!(self.face_count, other.face_count);
+        self.dice_count -= other.dice_count;
+        self.dice_count = self.dice_count.max(0);
+    }
+}
+impl Mul<i32> for Dice {
+    type Output = Self;
+    fn mul(self, other: i32) -> Self {
+        assert!(other >= 0);
+        Self {
+            face_count: self.face_count,
+            dice_count: self.dice_count * other,
+        }
+    }
+}
+impl MulAssign<i32> for Dice {
+    fn mul_assign(&mut self, other: i32) {
+        assert!(other >= 0);
+        self.dice_count *= other;
+    }
+}
