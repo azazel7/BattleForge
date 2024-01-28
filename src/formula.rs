@@ -1,10 +1,9 @@
 use crate::dice::Dice;
+use crate::utils::*;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::num::ParseIntError;
 use std::str::FromStr;
-use crate::utils::*;
-
 
 #[derive(Default, Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Formula {
@@ -24,7 +23,7 @@ impl Formula {
         self.fixed += amount;
     }
     pub fn is_formula(s: &str) -> bool {
-        let reg = Regex::new(r"[0-9]+d[1-9][0-9]*([+\-][0-9]*|)").unwrap();
+        let reg = Regex::new(r"^([+\-]?[0-9]+)$|^[0-9]+d[1-9][0-9]*([+\-][0-9]*|)").unwrap();
         reg.find(s).is_some()
     }
 }
@@ -32,14 +31,18 @@ impl From<&str> for Formula {
     fn from(item: &str) -> Self {
         /*
          * Regex capture 3d6+2, 3d6-2, 3d6
+         * Since there is 2 capture zone, then capture will have 2 capture area, one for each
          */
-        let reg_fixed = Regex::new(r"[0-9]+d[1-9][0-9]*([+\-][0-9]*|)").unwrap();
+        let reg_fixed = Regex::new(r"^([+\-]?[0-9]+)$|^[0-9]+d[1-9][0-9]*([+\-][0-9]*|)").unwrap();
         if let Some(capture) = reg_fixed.captures(item) {
-            let fixed = capture.get(1).unwrap().as_str().parse::<i32>().unwrap_or(0);
-            Self {
-                dice: Dice::from(item),
-                fixed,
-            }
+            let (fixed, dice) = if let Some(m) = capture.get(1) {
+                (m.as_str().parse::<i32>().unwrap_or(0), Dice::new(0, 1))
+            } else if let Some(m) = capture.get(2) {
+                (m.as_str().parse::<i32>().unwrap_or(0), Dice::from(item))
+            } else {
+                unreachable!("Formula::from: regex matched bu no pattern are available.");
+            };
+            Self { dice, fixed }
         } else {
             panic!("The Formula string has the wrong format : {item}");
         }
@@ -62,6 +65,12 @@ mod tests {
     use super::*;
     #[test]
     fn from() {
+        let f = Formula::from("-31");
+        assert_eq!(f.fixed, -31);
+        assert_eq!(f.dice.dice_count(), 0);
+        let f = Formula::from("7");
+        assert_eq!(f.fixed, 7);
+        assert_eq!(f.dice.dice_count(), 0);
         let f = Formula::from("3d6");
         assert_eq!(f.fixed, 0);
         assert_eq!(f.dice.face_count(), 6);
@@ -77,6 +86,7 @@ mod tests {
     }
     #[test]
     fn is_formula() {
+        assert!(Formula::is_formula("27"));
         assert!(Formula::is_formula("3d6"));
         assert!(Formula::is_formula("123d6"));
         assert!(Formula::is_formula("1d234"));
