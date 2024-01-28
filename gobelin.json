@@ -1,5 +1,33 @@
 [
   {
+  "name" : "Kelani",
+  "entity_stats" : {
+    "ability" : {
+      "strength" : 8,
+      "dexterity" : 14,
+      "constitution" : 17,
+      "intelligence" : 10,
+      "wisdom" : 18,
+      "charisma" : 11
+    },
+    "saving_throw" : {
+      "strength" : 8,
+      "dexterity" : 14,
+      "constitution" : 20,
+      "intelligence" : 10,
+      "wisdom" : 22,
+      "charisma" : 14
+    },
+    "initiative" : 14,
+    "hp" : "27",
+    "armor_class" : 15
+  },
+  "resources" : [{"Spell" : 1}, {"Spell" : 1}, {"Spell" : 2}],
+  "actions" : [
+    {"Spell" : {"name":"Inflict Wound", "spell_attack" : 6, "spell_dc": 14}}
+  ]
+},
+  {
   "name" : "Gobelin",
   "entity_stats" : {
     "ability" : {

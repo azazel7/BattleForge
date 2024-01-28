@@ -9,8 +9,3 @@ mod action;
 mod stats;
 mod spell;
 mod template_builder;
-
-pub trait FromTemplate<T>: Sized {
-    fn from_template(builder: &TemplateBuilder, value: T) -> Self;
-}
-

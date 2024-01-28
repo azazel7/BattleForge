@@ -11,7 +11,7 @@ pub enum Resource {
     Spell(i32),
 }
 
-#[derive(Default, Clone, Debug, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Default, Copy, Clone, Debug, PartialEq, Hash, Serialize, Deserialize)]
 pub enum Charge {
     #[default]
     Infinite,

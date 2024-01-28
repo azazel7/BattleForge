@@ -31,12 +31,16 @@ fn main() {
     // println!("{:?}", monster_database);
 
 
-    let mut builder = TemplateBuilder::new(monster_database);
+    let mut builder = TemplateBuilder::new(monster_database, spell_database);
+
+    // let kelani = builder.create("Kelani").team(0).build();
+    // println!("{:?}", kelani);
     //TODO change their team
     let monsters = vec![
         builder.create("Gobelin").hp(7).team(0).build(),
         builder.create("Gobelin").hp(8).team(0).build(),
-        builder.create("Black Bear").team(1).build(),
+        // builder.create("Black Bear").team(1).build(),
+        builder.create("Kelani").team(1).build(),
     ];
     let mut fight = Fight::new(monsters);
     let winner = fight.play();

@@ -1,3 +1,4 @@
+use crate::resource::Resource;
 use crate::template::ActionTemplate;
 use crate::template::MonsterStatsTemplate;
 use serde::{Deserialize, Serialize};
@@ -7,6 +8,8 @@ pub struct MonsterTemplate {
     pub name: String,
     pub entity_stats: MonsterStatsTemplate,
     pub actions: Vec<ActionTemplate>,
+    #[serde(default)]
+    pub resources: Vec<Resource>,
 }
 
 

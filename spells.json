@@ -1,11 +1,11 @@
 {
   "Inflict Wound" : {
     "charges" : "Infinite",
-    "resources" : ["Action", "SpellAction", {"Spell" : 1}],
+    "resources" : ["Action"],
     "level" : 1,
     "components" : [[{"Attack" : {"attack_modifier" : 6, "dammage": "3d10", "target_count" : 1}}, 
                      {"Attack" : {"attack_modifier" : 0, "dammage": "1d10", "target_count" : 0}}]],
-    "upcast" : [{"Attack" : {"attack_modifier" : 6, "dammage": "1d10", "target_count" : 0}}]
+    "upcast_components" : []
   }
 }
 

@@ -6,16 +6,18 @@ use crate::utils::*;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ActionTemplate {
     Attack {
-        attack_modifier: i8,
+        attack_modifier: i32,
         #[serde(deserialize_with = "string_or_struct")]
         dammage: Formula,
-        target_count: i8,
+        target_count: i32,
     },
     MultiAttack {
         attacks: Vec<ActionTemplate>,
     },
     Spell {
         name: String,
+        spell_attack : i32,
+        spell_dc: i32,
     },
 }
 impl Default for ActionTemplate {
