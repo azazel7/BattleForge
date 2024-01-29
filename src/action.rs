@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::process::Output;
 
 use crate::ability::Ability;
 use crate::float::F32;
@@ -23,10 +24,20 @@ pub trait Action {
     fn use_charge(&mut self);
 }
 //https://serde.rs/enum-representations.html
-#[derive(Default, Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub enum ActionComponent {
     #[default]
     Nothing,
+    // HitCondition {
+    //     attack_modifier: i32,
+    //     next: Vec<ActionComponent>,
+    //
+    // },
+    // SaveCondition {
+    //     save_dc: i32,
+    //     ability: Ability,
+    //     next: Vec<ActionComponent>,
+    // },
     Attack {
         #[serde(default)]
         attack_modifier: i32,
@@ -175,6 +186,35 @@ impl Add for ActionComponent {
         }
     }
 }
+impl Add<&ActionComponent> for ActionComponent {
+    type Output = Self;
+    fn add(self, other: &Self) -> Self {
+        //Check which enum the component is
+        match (&self, other) {
+            (
+                Self::Attack {
+                    attack_modifier,
+                    dammage: self_dmg,
+                    target_count: self_target,
+                },
+                Self::Attack {
+                    attack_modifier: _,
+                    dammage: other_dmg,
+                    target_count: other_target,
+                },
+            ) => {
+                //Sum up
+                Self::Attack {
+                    attack_modifier: *attack_modifier,
+                    dammage: *self_dmg + *other_dmg,
+                    target_count: self_target + other_target,
+                }
+            }
+            (Self::Nothing, a) | (a, Self::Nothing) => a.clone(),
+            _ => unreachable!("Summing two different components"),
+        }
+    }
+}
 impl Mul<i32> for ActionComponent {
     type Output = Self;
     fn mul(self, other: i32) -> Self {
@@ -193,6 +233,28 @@ impl Mul<i32> for ActionComponent {
                 }
             }
             Self::Nothing => Self::Nothing,
+            _ => unreachable!("Multiplying a component not implemented. ({:?})", self),
+        }
+    }
+}
+impl Mul<i32> for &ActionComponent {
+    type Output = ActionComponent;
+    fn mul(self, other: i32) -> ActionComponent {
+        //Check which enum the component is
+        match self {
+            ActionComponent::Attack {
+                attack_modifier,
+                dammage: self_dmg,
+                target_count: self_target,
+            } => {
+                //Sum up
+                ActionComponent::Attack {
+                    attack_modifier: *attack_modifier,
+                    dammage: *self_dmg * other,
+                    target_count: self_target * other,
+                }
+            }
+            &ActionComponent::Nothing => ActionComponent::Nothing,
             _ => unreachable!("Multiplying a component not implemented. ({:?})", self),
         }
     }
