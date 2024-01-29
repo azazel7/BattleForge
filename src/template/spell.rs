@@ -47,12 +47,17 @@ impl SpellTemplate {
         action.add_resource(Resource::SpellAction);
         action.add_resource(Resource::Spell(self.level + self.upcast_level));
         for (comp, upcast) in &self.components {
-            let new_comp = *comp + *upcast * self.upcast_level;
+            let mut new_comp = *comp + *upcast * self.upcast_level;
+            new_comp.set_save_dc(self.spell_dc);
+            new_comp.set_hit_roll(self.spell_attack);
             action.add_component(new_comp);
         }
         for _ in 0..self.upcast_level {
             for comp in &self.upcast_components {
-                action.add_component(*comp);
+                let mut new_comp = *comp;
+                new_comp.set_save_dc(self.spell_dc);
+                new_comp.set_hit_roll(self.spell_attack);
+                action.add_component(new_comp);
             }
         }
         action
