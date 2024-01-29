@@ -28,17 +28,22 @@ pub enum ActionComponent {
     #[default]
     Nothing,
     Attack {
+        #[serde(default)]
         attack_modifier: i32,
         #[serde(deserialize_with = "string_or_struct")]
         dammage: Formula,
+        #[serde(default)]
         target_count: i32,
     },
     Save {
+        #[serde(default)]
         save_dc: i32,
         ability: Ability,
         #[serde(deserialize_with = "string_or_struct")]
         dammage: Formula,
+        #[serde(default)]
         half: bool,
+        #[serde(default)]
         target_count: i32,
     },
 }

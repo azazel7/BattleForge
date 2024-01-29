@@ -3,8 +3,19 @@
     "charges" : "Infinite",
     "resources" : ["Action"],
     "level" : 1,
-    "components" : [[{"Attack" : {"attack_modifier" : 6, "dammage": "3d10", "target_count" : 1}}, 
-                     {"Attack" : {"attack_modifier" : 0, "dammage": "1d10", "target_count" : 0}}]],
+    "components" : [[{"Attack" : {"attack_modifier" : 0, "dammage": "3d10", "target_count" : 1}}, 
+                     {"Attack" : {"dammage": "1d10"}}]],
+    "upcast_components" : []
+  },
+  "Ice Knife" : {
+    "charges" : "Infinite",
+    "resources" : ["Action"],
+    "level" : 1,
+    "components" : [[{"Attack" : {"attack_modifier" : 0, "dammage": "1d10", "target_count" : 1}}, 
+                     "Nothing"], 
+                    [{"Attack" : {"attack_modifier" : 0, "dammage": "2d6", "target_count" : 2}}, 
+                     {"Attack" : {"dammage": "1d6"}}]
+    ],
     "upcast_components" : []
   }
 }
