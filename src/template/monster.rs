@@ -11,5 +11,3 @@ pub struct MonsterTemplate {
     #[serde(default)]
     pub resources: Vec<Resource>,
 }
-
-

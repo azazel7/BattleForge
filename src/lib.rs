@@ -1,4 +1,4 @@
-
+#![feature(variant_count)]
 pub mod utils;
 pub mod fight;
 pub mod monster;
@@ -8,3 +8,4 @@ pub mod resource;
 pub mod formula;
 pub mod template;
 pub mod float;
+pub mod ability;

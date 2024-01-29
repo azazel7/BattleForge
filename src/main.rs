@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use BattleForge::fight::Fight;
-use BattleForge::template::TemplateBuilder;
+use BattleForge::resource::{Charge, Resource};
 use BattleForge::template::MonsterTemplate;
 use BattleForge::template::SpellTemplate;
-use BattleForge::resource::{Charge, Resource};
+use BattleForge::template::TemplateBuilder;
 
 fn main() {
     let j = serde_json::to_string(&Charge::Infinite).unwrap();
@@ -16,7 +16,6 @@ fn main() {
     println!("{}", j);
     let j = serde_json::to_string(&(1, Resource::Action)).unwrap();
     println!("{}", j);
-
 
     let mut file = File::open("gobelin.json").unwrap();
     let mut data = String::new();
@@ -29,7 +28,6 @@ fn main() {
     let spell_database: HashMap<String, SpellTemplate> = serde_json::from_str(&data).unwrap();
     println!("{:?}", spell_database);
     // println!("{:?}", monster_database);
-
 
     let mut builder = TemplateBuilder::new(monster_database, spell_database);
 

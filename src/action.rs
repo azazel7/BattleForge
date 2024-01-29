@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
+use crate::ability::Ability;
 use crate::float::F32;
 use crate::formula::Formula;
+use crate::monster;
 use crate::monster::*;
 use crate::resource::Charge;
 use crate::resource::Resource;
@@ -31,6 +33,14 @@ pub enum ActionComponent {
         dammage: Formula,
         target_count: i32,
     },
+    Save {
+        save_dc: i32,
+        ability: Ability,
+        #[serde(deserialize_with = "string_or_struct")]
+        dammage: Formula,
+        half: bool,
+        target_count: i32,
+    },
 }
 
 impl ActionComponent {
@@ -47,11 +57,9 @@ impl ActionComponent {
     pub fn average_dammage(&self) -> f32 {
         match self {
             ActionComponent::Nothing => 0.0,
-            ActionComponent::Attack {
-                attack_modifier: _,
-                dammage,
-                target_count,
-            } => dammage.average_roll(),
+            ActionComponent::Attack { dammage, .. } | ActionComponent::Save { dammage, .. } => {
+                dammage.average_roll()
+            }
         }
     }
 }
@@ -78,16 +86,38 @@ impl Action for ActionComponent {
                     eprintln!("Dammage {dmg} -> hp target : {}", target.hp());
                 }
             }
+            ActionComponent::Save {
+                save_dc,
+                ability,
+                dammage,
+                half,
+                ..
+            } => {
+                let mut rng = rand::thread_rng();
+                let die = Uniform::from(1..=20);
+                let throw = die.sample(&mut rng);
+                let save_mod = target.save_mod(*ability);
+                let hit = throw + save_mod;
+                let dmg = dammage.roll();
+                eprintln!("Save {throw}+{save_mod} = {hit} (DC {save_dc})");
+                let dmg = if hit >= *save_dc {
+                    //Succeed
+                    dmg
+                } else if *half {
+                    //Fail but take half dammage
+                    (dmg as f32 * 0.5).floor() as i32
+                } else {
+                    0
+                };
+                target.decrease_hp(dmg);
+            }
             ActionComponent::Nothing => {}
         }
     }
     fn target_count(&self) -> usize {
         match &self {
-            ActionComponent::Attack {
-                attack_modifier: _,
-                dammage: _,
-                target_count,
-            } => *target_count as usize,
+            ActionComponent::Attack { target_count, .. }
+            | ActionComponent::Save { target_count, .. } => *target_count as usize,
             ActionComponent::Nothing => 0,
         }
     }

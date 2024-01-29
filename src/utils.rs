@@ -1,8 +1,8 @@
 use std::fmt;
 use std::marker::PhantomData;
 
-use serde::de::{self, Visitor, MapAccess};
-use serde::{Deserialize,Deserializer};
+use serde::de::{self, MapAccess, Visitor};
+use serde::{Deserialize, Deserializer};
 use std::num::ParseIntError;
 use std::str::FromStr;
 
@@ -50,3 +50,6 @@ where
     deserializer.deserialize_any(StringOrStruct(PhantomData))
 }
 
+pub fn modifier(score: i32) -> i32 {
+    ((score - (score % 2)) / 2) + 5
+}

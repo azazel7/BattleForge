@@ -1,8 +1,10 @@
+use crate::ability::Ability;
 use crate::template::MonsterStatsTemplate;
-use crate::{action::*, fight::Fight, float::*, resource::*, template::*};
+use crate::{action::*, fight::Fight, float::*, resource::*, template::*, utils::*};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::iter::once;
+use std::mem;
 
 #[derive(Default, Clone, Debug)]
 pub struct Monster {
@@ -140,21 +142,15 @@ impl Monster {
             .max()
             .unwrap_or(0)
     }
+    pub fn save_mod(&self, ability: Ability) -> i32 {
+        self.entity_stats.save_mod(ability)
+    }
 }
 
-#[derive(Default, Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct Stats {
-    strength: i8,
-    dexterity: i8,
-    constitution: i8,
-    wisdom: i8,
-    intelligence: i8,
-    charisma: i8,
-}
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct MonsterStats {
-    ability: Stats,
-    saving_throw: Stats,
+    ability: [i8; mem::variant_count::<Ability>()],
+    saving_throws: [i8; mem::variant_count::<Ability>()],
     initiative: i8,
     armor_class: i8,
     hp: i32,
@@ -164,9 +160,30 @@ pub struct MonsterStats {
 impl MonsterStats {
     fn from_template(builder: &TemplateBuilder, template: &MonsterStatsTemplate) -> Self {
         let hp = template.hp.roll();
+        let mut ability = [0; mem::variant_count::<Ability>()];
+        ability[Ability::Strength as usize] = template.abilities.strength;
+        ability[Ability::Dexterity as usize] = template.abilities.dexterity;
+        ability[Ability::Constitution as usize] = template.abilities.constitution;
+        ability[Ability::Intelligence as usize] = template.abilities.intelligence;
+        ability[Ability::Wisdom as usize] = template.abilities.wisdom;
+        ability[Ability::Charisma as usize] = template.abilities.charisma;
+        let mut saving_throws = [0; mem::variant_count::<Ability>()];
+        saving_throws[Ability::Strength as usize] =
+            modifier(template.saving_throws.strength.into()) as i8;
+        saving_throws[Ability::Dexterity as usize] =
+            modifier(template.saving_throws.dexterity.into()) as i8;
+        saving_throws[Ability::Constitution as usize] =
+            modifier(template.saving_throws.constitution.into()) as i8;
+        saving_throws[Ability::Intelligence as usize] =
+            modifier(template.saving_throws.intelligence.into()) as i8;
+        saving_throws[Ability::Wisdom as usize] =
+            modifier(template.saving_throws.wisdom.into()) as i8;
+        saving_throws[Ability::Charisma as usize] =
+            modifier(template.saving_throws.charisma.into()) as i8;
+
         Self {
-            ability: template.ability,
-            saving_throw: template.saving_throw,
+            ability,
+            saving_throws,
             initiative: template.initiative,
             armor_class: template.armor_class,
             hp,
@@ -198,5 +215,8 @@ impl MonsterStats {
     }
     pub fn armor_class(&self) -> i32 {
         self.armor_class as i32
+    }
+    pub fn save_mod(&self, ability: Ability) -> i32 {
+        self.saving_throws[ability as usize] as i32
     }
 }
