@@ -79,7 +79,7 @@ impl Monster {
     pub fn increase_hp(&mut self, amount: i32) {
         self.entity_stats.increase_hp(amount);
     }
-    pub fn get_targets(&self, fight: &Fight, action: &dyn Action) -> Vec<usize> {
+    pub fn get_targets(&self, fight: &Fight, action: &ActionComponent) -> Vec<usize> {
         let target_count = action.target_count() as usize;
         fight
             .get_entities()

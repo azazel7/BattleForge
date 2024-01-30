@@ -1,13 +1,31 @@
-- [ ] Include dices in dammages.
-- [ ] Build entities from template.
+- [x] Include dices in dammages.
+- [x] Build entities from template.
 - [ ] Use a database of entities.
-    - [ ] Build the database.
+    - [x] Build the database.
     - [ ] Share fixed values between the template and the entities.
-- [ ] Make recursive actions.
-    - [ ] Action should contain a list of other actions
-- [ ] Have capacities that can be used a limited amount of time (potion, object)
-- [ ] Include spell + spell slot limit
-    - [ ] Modify the entitie that take an action
-- [ ] Add "advantage" and "disadvantage" on rolls
-- [ ] Use saving throw for spells
-    - [ ] Add function to roll saving throw
+- [ ] Make recursive actions (to have the condition hit/save separated from multiple effect like damage+condition).
+    - [x] Action should contain a list of other actions
+    - [x] Make conditionnal ActionComponent
+    - [ ] How to propagate upcast to recursive conditions?
+    - [ ] How to compute the amount of targets per effects?
+    - [ ] How ice knife second effect (cold damage explosion) is suppose to keep at least the previous target?
+- [ ] Add name to actions.
+- [x] Have capacities that can be used a limited amount of time (potion, object)
+- [x] Include spell + spell slot limit
+- [x] Modify the entitie that take an action
+- [x] Use saving throw for spells
+    - [x] Add function to roll saving throw
+- [ ] Add damage resistance and immunities
+- [ ] Add conditions/effect to monsters (blinded, poisoned, vicious mockery, ...) 
+    - [ ] Make a list of current effect on entities.
+    - [ ] Call effects at the right time by the action to alter behaviors
+        - [ ] Add "advantage" and "disadvantage" on rolls
+        - [ ] Alter damage roll
+        - [ ] Alter hit roll
+        - [ ] Alter save roll
+        - [ ] When attacking target
+        - [ ] When target attacks
+        - [ ] Can't target someone
+        - [ ] Paralyzed
+
+

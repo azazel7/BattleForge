@@ -74,34 +74,46 @@ impl FromStr for Dice {
 impl Add for Dice {
     type Output = Self;
     fn add(self, other: Self) -> Self {
-        assert_eq!(self.face_count, other.face_count);
-        Self {
-            face_count: self.face_count,
-            dice_count: self.dice_count + other.dice_count,
+        if other.dice_count > 0 {
+            assert_eq!(self.face_count, other.face_count);
+            Self {
+                face_count: self.face_count,
+                dice_count: self.dice_count + other.dice_count,
+            }
+        } else {
+            self
         }
     }
 }
 impl AddAssign for Dice {
     fn add_assign(&mut self, other: Self) {
-        assert_eq!(self.face_count, other.face_count);
-        self.dice_count += other.dice_count;
+        if other.dice_count > 0 {
+            assert_eq!(self.face_count, other.face_count);
+            self.dice_count += other.dice_count;
+        }
     }
 }
 impl Sub for Dice {
     type Output = Self;
     fn sub(self, other: Self) -> Self {
-        assert_eq!(self.face_count, other.face_count);
-        Self {
-            face_count: self.face_count,
-            dice_count: (self.dice_count - other.dice_count).max(0),
+        if other.dice_count > 0 {
+            assert_eq!(self.face_count, other.face_count);
+            Self {
+                face_count: self.face_count,
+                dice_count: (self.dice_count - other.dice_count).max(0),
+            }
+        } else {
+            self
         }
     }
 }
 impl SubAssign for Dice {
     fn sub_assign(&mut self, other: Self) {
-        assert_eq!(self.face_count, other.face_count);
-        self.dice_count -= other.dice_count;
-        self.dice_count = self.dice_count.max(0);
+        if other.dice_count > 0 {
+            assert_eq!(self.face_count, other.face_count);
+            self.dice_count -= other.dice_count;
+            self.dice_count = self.dice_count.max(0);
+        }
     }
 }
 impl Mul<i32> for Dice {

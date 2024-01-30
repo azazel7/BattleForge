@@ -1,10 +1,8 @@
+use core::panic;
 use std::collections::HashMap;
-use std::process::Output;
 
 use crate::ability::Ability;
-use crate::float::F32;
 use crate::formula::Formula;
-use crate::monster;
 use crate::monster::*;
 use crate::resource::Charge;
 use crate::resource::Resource;
@@ -13,81 +11,54 @@ use crate::template::TemplateBuilder;
 use crate::utils::*;
 use rand::distributions::{Distribution, Uniform};
 use serde::{Deserialize, Serialize};
-use std::ops::{Add, Mul};
 
-pub trait Action {
-    fn apply(&self, m: &mut Monster);
-    fn target_count(&self) -> usize;
-    fn consume_resources(&self, resources: &mut HashMap<Resource, i32>);
-    fn is_available(&self, resources: &HashMap<Resource, i32>) -> bool;
-    fn has_charges(&self) -> bool;
-    fn use_charge(&mut self);
-}
-//https://serde.rs/enum-representations.html
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
-pub enum ActionComponent {
+#[derive(Default, Copy, Clone, Debug, Serialize, Deserialize)]
+pub enum ActionCondition {
     #[default]
-    Nothing,
-    // HitCondition {
-    //     attack_modifier: i32,
-    //     next: Vec<ActionComponent>,
-    //
-    // },
-    // SaveCondition {
-    //     save_dc: i32,
-    //     ability: Ability,
-    //     next: Vec<ActionComponent>,
-    // },
-    Attack {
+    True,
+    False,
+    HitCondition {
         #[serde(default)]
         attack_modifier: i32,
-        #[serde(deserialize_with = "string_or_struct")]
-        dammage: Formula,
-        #[serde(default)]
-        target_count: i32,
     },
-    Save {
+    SaveCondition {
         #[serde(default)]
         save_dc: i32,
         ability: Ability,
-        #[serde(deserialize_with = "string_or_struct")]
-        dammage: Formula,
-        #[serde(default)]
-        half: bool,
-        #[serde(default)]
-        target_count: i32,
     },
 }
-
-impl ActionComponent {
+impl ActionCondition {
     pub fn set_hit_roll(&mut self, attack_modifier: i32) {
         match self {
-            Self::Attack {
-                attack_modifier: att,
-                ..
-            } => *att = attack_modifier,
+            Self::HitCondition {
+                attack_modifier: am,
+            } => {
+                *am = attack_modifier;
+            }
             _ => {}
         }
     }
-    pub fn set_save_dc(&mut self, save_dc: i32) {}
-    pub fn average_dammage(&self) -> f32 {
+    pub fn set_save_dc(&mut self, save_dc: i32) {
         match self {
-            ActionComponent::Nothing => 0.0,
-            ActionComponent::Attack { dammage, .. } | ActionComponent::Save { dammage, .. } => {
-                dammage.average_roll()
-            }
+            Self::SaveCondition { save_dc: sd, .. } => *sd = save_dc,
+            _ => {}
         }
     }
-}
-impl Action for ActionComponent {
-    // add code here
-    fn apply(&self, target: &mut Monster) {
-        match &self {
-            ActionComponent::Attack {
-                attack_modifier,
-                dammage,
-                target_count: _,
-            } => {
+    fn pass(&self, target: &mut Monster) -> bool {
+        match self {
+            Self::True => true,
+            Self::False => false,
+            Self::SaveCondition { save_dc, ability } => {
+                let mut rng = rand::thread_rng();
+                let die = Uniform::from(1..=20);
+                let throw = die.sample(&mut rng);
+                let save_mod = target.save_mod(*ability);
+                let hit = throw + save_mod;
+                eprintln!("Save {throw}+{save_mod} = {hit} (DC {save_dc})");
+                hit >= *save_dc
+            }
+            Self::HitCondition { attack_modifier } => {
+                //TODO roll a 1d20
                 let mut rng = rand::thread_rng();
                 let die = Uniform::from(1..=20);
                 let throw = die.sample(&mut rng);
@@ -96,170 +67,189 @@ impl Action for ActionComponent {
                     "Roll {throw}+{attack_modifier} = {hit} (AC {})",
                     target.ac()
                 );
-                if hit >= target.ac() {
-                    let dmg = dammage.roll();
-                    target.decrease_hp(dmg);
-                    eprintln!("Dammage {dmg} -> hp target : {}", target.hp());
-                }
+                hit >= target.ac()
             }
-            ActionComponent::Save {
-                save_dc,
-                ability,
-                dammage,
-                half,
-                ..
-            } => {
-                let mut rng = rand::thread_rng();
-                let die = Uniform::from(1..=20);
-                let throw = die.sample(&mut rng);
-                let save_mod = target.save_mod(*ability);
-                let hit = throw + save_mod;
-                let dmg = dammage.roll();
-                eprintln!("Save {throw}+{save_mod} = {hit} (DC {save_dc})");
-                let dmg = if hit >= *save_dc {
-                    //Succeed
-                    dmg
-                } else if *half {
-                    //Fail but take half dammage
-                    (dmg as f32 * 0.5).floor() as i32
-                } else {
-                    0
-                };
-                target.decrease_hp(dmg);
-            }
-            ActionComponent::Nothing => {}
-        }
-    }
-    fn target_count(&self) -> usize {
-        match &self {
-            ActionComponent::Attack { target_count, .. }
-            | ActionComponent::Save { target_count, .. } => *target_count as usize,
-            ActionComponent::Nothing => 0,
-        }
-    }
-    fn consume_resources(&self, resources: &mut HashMap<Resource, i32>) {
-        resources
-            .entry(Resource::Action)
-            .and_modify(|qty| *qty -= 1);
-    }
-    fn is_available(&self, resources: &HashMap<Resource, i32>) -> bool {
-        let res = resources.get(&Resource::Action);
-        if let Some(qty) = res {
-            *qty > 0
-        } else {
-            false
-        }
-    }
-    fn has_charges(&self) -> bool {
-        true
-    }
-    fn use_charge(&mut self) {
-        unimplemented!("ActionComponent::use_charge");
-    }
-}
-impl Add for ActionComponent {
-    type Output = Self;
-    fn add(self, other: Self) -> Self {
-        //Check which enum the component is
-        match (self, other) {
-            (
-                Self::Attack {
-                    attack_modifier,
-                    dammage: self_dmg,
-                    target_count: self_target,
-                },
-                Self::Attack {
-                    attack_modifier: _,
-                    dammage: other_dmg,
-                    target_count: other_target,
-                },
-            ) => {
-                //Sum up
-                Self::Attack {
-                    attack_modifier,
-                    dammage: self_dmg + other_dmg,
-                    target_count: self_target + other_target,
-                }
-            }
-            (Self::Nothing, a) | (a, Self::Nothing) => a,
-            _ => unreachable!("Summing two different components"),
-        }
-    }
-}
-impl Add<&ActionComponent> for ActionComponent {
-    type Output = Self;
-    fn add(self, other: &Self) -> Self {
-        //Check which enum the component is
-        match (&self, other) {
-            (
-                Self::Attack {
-                    attack_modifier,
-                    dammage: self_dmg,
-                    target_count: self_target,
-                },
-                Self::Attack {
-                    attack_modifier: _,
-                    dammage: other_dmg,
-                    target_count: other_target,
-                },
-            ) => {
-                //Sum up
-                Self::Attack {
-                    attack_modifier: *attack_modifier,
-                    dammage: *self_dmg + *other_dmg,
-                    target_count: self_target + other_target,
-                }
-            }
-            (Self::Nothing, a) | (a, Self::Nothing) => a.clone(),
-            _ => unreachable!("Summing two different components"),
-        }
-    }
-}
-impl Mul<i32> for ActionComponent {
-    type Output = Self;
-    fn mul(self, other: i32) -> Self {
-        //Check which enum the component is
-        match self {
-            Self::Attack {
-                attack_modifier,
-                dammage: self_dmg,
-                target_count: self_target,
-            } => {
-                //Sum up
-                Self::Attack {
-                    attack_modifier,
-                    dammage: self_dmg * other,
-                    target_count: self_target * other,
-                }
-            }
-            Self::Nothing => Self::Nothing,
-            _ => unreachable!("Multiplying a component not implemented. ({:?})", self),
-        }
-    }
-}
-impl Mul<i32> for &ActionComponent {
-    type Output = ActionComponent;
-    fn mul(self, other: i32) -> ActionComponent {
-        //Check which enum the component is
-        match self {
-            ActionComponent::Attack {
-                attack_modifier,
-                dammage: self_dmg,
-                target_count: self_target,
-            } => {
-                //Sum up
-                ActionComponent::Attack {
-                    attack_modifier: *attack_modifier,
-                    dammage: *self_dmg * other,
-                    target_count: self_target * other,
-                }
-            }
-            &ActionComponent::Nothing => ActionComponent::Nothing,
-            _ => unreachable!("Multiplying a component not implemented. ({:?})", self),
         }
     }
 }
 
+//https://serde.rs/enum-representations.html
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+pub enum ActionComponent {
+    #[default]
+    Nothing,
+    Condition {
+        target_count: i32,
+        condition: ActionCondition,
+        success: Box<ActionComponent>,
+        failure: Box<ActionComponent>,
+    },
+    MultiComponent {
+        next: Vec<ActionComponent>,
+    },
+    Damage {
+        #[serde(deserialize_with = "string_or_struct")]
+        damage: Formula,
+    },
+    HalfDamage {
+        #[serde(deserialize_with = "string_or_struct")]
+        damage: Formula,
+    },
+}
+
+impl ActionComponent {
+    pub fn set_hit_roll(&mut self, attack_modifier: i32) {
+        match self {
+            Self::Condition {
+                condition,
+                success,
+                failure,
+                ..
+            } => {
+                condition.set_hit_roll(attack_modifier);
+                success.set_hit_roll(attack_modifier);
+                failure.set_hit_roll(attack_modifier);
+            }
+            Self::MultiComponent { next } => {
+                for comp in next {
+                    comp.set_hit_roll(attack_modifier);
+                }
+            }
+            _ => {}
+        }
+    }
+    pub fn set_save_dc(&mut self, save_dc: i32) {
+        match self {
+            Self::Condition {
+                condition,
+                success,
+                failure,
+                ..
+            } => {
+                condition.set_save_dc(save_dc);
+                success.set_save_dc(save_dc);
+                failure.set_save_dc(save_dc);
+            }
+            Self::MultiComponent { next } => {
+                for comp in next {
+                    comp.set_save_dc(save_dc);
+                }
+            }
+            _ => {}
+        }
+    }
+    pub fn set_target_count(&mut self, target_count: i32) {
+        match self {
+            Self::Condition {
+                target_count: tc,
+                success,
+                failure,
+                ..
+            } => {
+                *tc = target_count;
+                success.set_target_count(target_count);
+                failure.set_target_count(target_count);
+            }
+            Self::MultiComponent { next } => {
+                for comp in next {
+                    comp.set_target_count(target_count);
+                }
+            }
+            _ => {}
+        }
+    }
+    pub fn increase_damage(&mut self, damage: &Formula) {
+        match self {
+            ActionComponent::Nothing => {}
+            ActionComponent::Damage { damage: dmg, .. }
+            | ActionComponent::HalfDamage { damage: dmg, .. } => *dmg += *damage,
+            ActionComponent::Condition {
+                success, failure, ..
+            } => {
+                success.increase_damage(damage);
+                failure.increase_damage(damage);
+            }
+            ActionComponent::MultiComponent { next } => {
+                for comp in next {
+                    comp.increase_damage(damage);
+                }
+            }
+        }
+    }
+    pub fn increase_target_count(&mut self, amount: i32) {
+        match self {
+            ActionComponent::Nothing
+            | ActionComponent::Damage { .. }
+            | ActionComponent::HalfDamage { .. } => {}
+            ActionComponent::Condition {
+                success,
+                failure,
+                target_count,
+                ..
+            } => {
+                *target_count += amount;
+                success.increase_target_count(amount);
+                failure.increase_target_count(amount);
+            }
+            ActionComponent::MultiComponent { next } => {
+                for comp in next {
+                    comp.increase_target_count(amount);
+                }
+            }
+        }
+    }
+    pub fn average_dammage(&self) -> f32 {
+        match self {
+            ActionComponent::Nothing => 0.0,
+            ActionComponent::Damage { damage, .. } => damage.average_roll(),
+            ActionComponent::HalfDamage { damage, .. } => damage.average_roll() / 2.0,
+            ActionComponent::Condition { success, .. } => success.average_dammage(), //TODO take failure in account too
+            ActionComponent::MultiComponent { next } => {
+                next.iter().map(|comp| comp.average_dammage()).sum()
+            }
+        }
+    }
+    pub fn apply(&self, target: &mut Monster) {
+        match &self {
+            ActionComponent::Damage { damage } => {
+                let dmg = damage.roll();
+                target.decrease_hp(dmg);
+                eprintln!("Dammage {dmg} -> hp target : {}", target.hp());
+            }
+            ActionComponent::HalfDamage { damage } => {
+                let dmg = (damage.roll() as f32 / 2.0).floor() as i32;
+                target.decrease_hp(dmg);
+                eprintln!("Dammage {dmg} -> hp target : {}", target.hp());
+            }
+            ActionComponent::Condition {
+                condition,
+                success,
+                failure,
+                ..
+            } => {
+                if condition.pass(target) {
+                    success.apply(target);
+                } else {
+                    failure.apply(target);
+                }
+            }
+            ActionComponent::MultiComponent { next } => {
+                for comp in next {
+                    comp.apply(target);
+                }
+            }
+            ActionComponent::Nothing => {}
+        }
+    }
+    pub fn target_count(&self) -> usize {
+        match &self {
+            ActionComponent::Condition { target_count, .. } => *target_count as usize,
+            ActionComponent::Damage { .. } | ActionComponent::HalfDamage { .. } => 1, //TODO does that makes sense?
+            ActionComponent::MultiComponent { .. } => 1, //TODO does that makes sense?
+            ActionComponent::Nothing => 0,
+        }
+    }
+}
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ActionStruct {
     charges: Charge,
@@ -281,9 +271,13 @@ impl ActionStruct {
                 dammage,
                 target_count,
             } => {
-                let component = ActionComponent::Attack {
-                    attack_modifier: *attack_modifier,
-                    dammage: *dammage,
+                let dmg = ActionComponent::Damage { damage: *dammage };
+                let component = ActionComponent::Condition {
+                    condition: ActionCondition::HitCondition {
+                        attack_modifier: *attack_modifier,
+                    },
+                    success: Box::new(dmg),
+                    failure: Box::new(ActionComponent::Nothing),
                     target_count: *target_count,
                 };
                 vec![ActionStruct {
@@ -300,11 +294,18 @@ impl ActionStruct {
                             attack_modifier,
                             dammage,
                             target_count,
-                        } => ActionComponent::Attack {
-                            attack_modifier: *attack_modifier,
-                            dammage: *dammage,
-                            target_count: *target_count,
-                        },
+                        } => {
+                            let dmg = ActionComponent::Damage { damage: *dammage };
+                            let component = ActionComponent::Condition {
+                                condition: ActionCondition::HitCondition {
+                                    attack_modifier: *attack_modifier,
+                                },
+                                success: Box::new(dmg),
+                                failure: Box::new(ActionComponent::Nothing),
+                                target_count: *target_count,
+                            };
+                            component
+                        }
                         ActionTemplate::MultiAttack { .. } => {
                             unreachable!("MultiAttack cannot be nested in the database.");
                         }
@@ -357,21 +358,12 @@ impl ActionStruct {
             .map(|component| component.average_dammage())
             .sum()
     }
-}
-impl Action for ActionStruct {
-    // add code here
-    fn apply(&self, target: &mut Monster) {
-        unimplemented!("ActionStruct::apply");
-    }
-    fn target_count(&self) -> usize {
-        unimplemented!("ActionStruct::apply");
-    }
-    fn consume_resources(&self, resources: &mut HashMap<Resource, i32>) {
+    pub fn consume_resources(&self, resources: &mut HashMap<Resource, i32>) {
         for resource in &self.resources {
             resources.entry(*resource).and_modify(|qty| *qty -= 1);
         }
     }
-    fn is_available(&self, resources: &HashMap<Resource, i32>) -> bool {
+    pub fn is_available(&self, resources: &HashMap<Resource, i32>) -> bool {
         self.resources.iter().all(|resource| {
             if let Some(qty) = resources.get(resource) {
                 *qty > 0
@@ -380,13 +372,13 @@ impl Action for ActionStruct {
             }
         })
     }
-    fn has_charges(&self) -> bool {
+    pub fn has_charges(&self) -> bool {
         match self.charges {
             Charge::Infinite => true,
             Charge::Limited(qty) => qty > 0,
         }
     }
-    fn use_charge(&mut self) {
+    pub fn use_charge(&mut self) {
         match &mut self.charges {
             Charge::Infinite => {}
             Charge::Limited(qty) => {

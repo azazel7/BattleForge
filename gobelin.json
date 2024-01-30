@@ -24,7 +24,7 @@
   },
   "resources" : [{"Spell" : 1}, {"Spell" : 1}, {"Spell" : 2}],
   "actions" : [
-    {"Spell" : {"name":"Inflict Wound", "spell_attack" : 6, "spell_dc": 14}},
+    {"Spell" : {"name":"Ice Knife", "spell_attack" : 6, "spell_dc": 14}},
     {"Attack" : {"attack_modifier" : 1, "dammage": "1", "target_count" : 1}}
   ]
 },

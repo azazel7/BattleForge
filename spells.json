@@ -3,18 +3,18 @@
     "charges" : "Infinite",
     "resources" : ["Action"],
     "level" : 1,
-    "components" : [[{"Attack" : {"attack_modifier" : 0, "dammage": "3d10", "target_count" : 1}}, 
-                     {"Attack" : {"dammage": "1d10"}}]],
+    "components" : [[{"Condition" : {"target_count" : 1, "condition": {"HitCondition": {"attack_modifier": 0}}, "failure" : "Nothing", "success": {"Damage": {"damage": "3d10"}}}}, 
+                     {"damage": "1d10"}]],
     "upcast_components" : []
   },
   "Ice Knife" : {
     "charges" : "Infinite",
     "resources" : ["Action"],
     "level" : 1,
-    "components" : [[{"Attack" : {"attack_modifier" : 0, "dammage": "1d10", "target_count" : 1}}, 
-                     "Nothing"], 
-                    [{"Attack" : {"attack_modifier" : 0, "dammage": "2d6", "target_count" : 2}}, 
-                     {"Attack" : {"dammage": "1d6"}}]
+    "components" : [[{"Condition" : {"target_count" : 1, "condition": {"HitCondition": {"attack_modifier": 0}}, "failure" : "Nothing", "success": {"Damage": {"damage": "1d10"}}}}, 
+                     {}], 
+                    [{"Condition" : {"target_count" : 2, "condition": {"SaveCondition": {"save_dc": 0, "ability": "Dexterity"}}, "failure" : "Nothing", "success": {"Damage": {"damage": "2d6"}}}}, 
+                     {"damage": "1d6"}]
     ],
     "upcast_components" : []
   }
