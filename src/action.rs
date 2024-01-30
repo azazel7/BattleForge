@@ -264,12 +264,14 @@ impl ActionStruct {
         builder: &TemplateBuilder,
         monster: &Monster,
         template: &ActionTemplate,
-    ) -> Vec<Self> {
+    ) -> HashMap<String, Self> {
+        let mut ret = HashMap::new();
         match template {
             ActionTemplate::Attack {
                 attack_modifier,
                 dammage,
                 target_count,
+                name,
             } => {
                 let dmg = ActionComponent::Damage { damage: *dammage };
                 let component = ActionComponent::Condition {
@@ -280,13 +282,14 @@ impl ActionStruct {
                     failure: Box::new(ActionComponent::Nothing),
                     target_count: *target_count,
                 };
-                vec![ActionStruct {
+                let action = ActionStruct {
                     charges: Charge::Infinite,
                     resources: vec![Resource::Action],
                     components: vec![component],
-                }]
+                };
+                ret.insert(name.clone(), action);
             }
-            ActionTemplate::MultiAttack { attacks } => {
+            ActionTemplate::MultiAttack { attacks, name } => {
                 let components = attacks
                     .iter()
                     .map(|t| match t {
@@ -294,6 +297,7 @@ impl ActionStruct {
                             attack_modifier,
                             dammage,
                             target_count,
+                            ..
                         } => {
                             let dmg = ActionComponent::Damage { damage: *dammage };
                             let component = ActionComponent::Condition {
@@ -314,11 +318,12 @@ impl ActionStruct {
                         }
                     })
                     .collect();
-                vec![ActionStruct {
+                let action = ActionStruct {
                     charges: Charge::Infinite,
                     resources: vec![Resource::Action],
                     components,
-                }]
+                };
+                ret.insert(name.clone(), action);
             }
             ActionTemplate::Spell {
                 name,
@@ -330,18 +335,21 @@ impl ActionStruct {
                 let highest = monster.highest_spell_slot();
                 let lowest = spell_template.get_base_level();
                 //Expend action based on how much the spell can be upcasted
-                (0..=(highest - lowest))
-                    .into_iter()
-                    .map(|upcast_lvl| {
-                        spell_template
-                            .spell_attack(*spell_attack)
-                            .spell_dc(*spell_dc)
-                            .upcast(upcast_lvl)
-                            .build()
-                    })
-                    .collect()
+                for upcast_lvl in 0..=(highest - lowest) {
+                    let action = spell_template
+                        .spell_attack(*spell_attack)
+                        .spell_dc(*spell_dc)
+                        .upcast(upcast_lvl)
+                        .build();
+                    let mut name = name.clone();
+                    let lvl = upcast_lvl+lowest;
+                    name.push_str(" ");
+                    name.push_str(&lvl.to_string());
+                    ret.insert(name, action);
+                }
             }
         }
+        ret
     }
     pub fn set_charge(&mut self, charge: Charge) {
         self.charges = charge;

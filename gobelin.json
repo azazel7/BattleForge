@@ -25,7 +25,7 @@
   "resources" : [{"Spell" : 1}, {"Spell" : 1}, {"Spell" : 2}],
   "actions" : [
     {"Spell" : {"name":"Ice Knife", "spell_attack" : 6, "spell_dc": 14}},
-    {"Attack" : {"attack_modifier" : 1, "dammage": "1", "target_count" : 1}}
+    {"Attack" : {"name": "Punch", "attack_modifier" : 1, "dammage": "1", "target_count" : 1}}
   ]
 },
   {
@@ -52,8 +52,7 @@
     "armor_class" : 15
   },
   "actions" : [
-    {"Attack" : {"attack_modifier" : 4, "dammage": "1d6", "target_count" : 1}},
-    {"Attack" : {"attack_modifier" : 4, "dammage": "1d6", "target_count" : 1}}
+    {"Attack" : {"name":"Scimitar", "attack_modifier" : 4, "dammage": "1d6+2", "target_count" : 1}}
   ]
 },
   {
@@ -81,9 +80,10 @@
   },
   "actions" : [
     {"MultiAttack" : {
+      "name" : "Bite and Claw",
       "attacks" : 
-      [{"Attack" : {"attack_modifier" : 3, "dammage": "1d6", "target_count" : 1}},
-        {"Attack" : {"attack_modifier" : 3, "dammage": "2d4", "target_count" : 1}}]}
+      [{"Attack" : {"name": "Bite", "attack_modifier" : 4, "dammage": "1d6+2", "target_count" : 1}},
+        {"Attack" : {"name": "Claws", "attack_modifier" : 4, "dammage": "2d4+2", "target_count" : 1}}]}
     } 
   ]
 }

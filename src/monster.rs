@@ -11,7 +11,7 @@ pub struct Monster {
     name: String,
     entity_stats: MonsterStats,
     team_id: u8,
-    actions: Vec<ActionStruct>,
+    actions: HashMap<String, ActionStruct>,
     resources: HashMap<Resource, i32>,
 }
 impl Monster {
@@ -34,7 +34,7 @@ impl Monster {
             name: template.name.clone(),
             entity_stats: MonsterStats::from_template(builder, &template.entity_stats),
             team_id: 0,
-            actions: vec![],
+            actions: HashMap::new(),
             resources,
         };
         //Create the action using monster to parametrize them
@@ -103,17 +103,18 @@ impl Monster {
             .actions
             .iter_mut()
             .filter_map(|action| {
-                if action.is_available(&resources) {
+                if action.1.is_available(&resources) {
                     Some(action)
                 } else {
                     None
                 }
             })
-            .max_by(|a, b| F32(a.average_dammage()).cmp(&F32(b.average_dammage())));
-        if let Some(action) = available_action {
+            .max_by(|a, b| F32(a.1.average_dammage()).cmp(&F32(b.1.average_dammage())));
+        if let Some((name, action)) = available_action {
             action.consume_resources(resources);
             action.use_charge();
 
+            println!("Use {name}");
             return Some(action.clone());
         } else {
             None
