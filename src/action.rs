@@ -90,10 +90,14 @@ pub enum ActionComponent {
     Damage {
         #[serde(deserialize_with = "string_or_struct")]
         damage: Formula,
+        #[serde(default)]
+        rolled: i32,
     },
     HalfDamage {
         #[serde(deserialize_with = "string_or_struct")]
         damage: Formula,
+        #[serde(default)]
+        rolled: i32,
     },
 }
 
@@ -209,17 +213,43 @@ impl ActionComponent {
             }
         }
     }
+    pub fn ready_for_apply(&mut self) {
+        //ready_for_apply is useful to pre-roll dices to Fireball doesn't inflict different amount
+        //of damage to each target.
+        //TODO HalfDamage and Damage do not have synchronized rolled :'(.
+        match self {
+            ActionComponent::Damage { damage, rolled } => {
+                *rolled = damage.roll();
+            }
+            ActionComponent::HalfDamage { damage, rolled } => {
+                *rolled = (damage.roll() as f32 / 2.0).floor() as i32;
+            }
+            ActionComponent::Condition {
+                success, failure, ..
+            } => {
+                success.ready_for_apply();
+                failure.ready_for_apply();
+            }
+            ActionComponent::MultiComponent { next } => {
+                for comp in next {
+                    comp.ready_for_apply();
+                }
+            }
+            ActionComponent::Nothing => {}
+        }
+    }
     pub fn apply(&self, target: &mut Monster) {
+        //Apply recursively all components to a target.
         match &self {
-            ActionComponent::Damage { damage } => {
-                let dmg = damage.roll();
+            ActionComponent::Damage { rolled, .. } => {
+                let dmg = *rolled;
                 target.decrease_hp(dmg);
                 eprintln!("Dammage {dmg} -> hp target : {}", target.hp());
             }
-            ActionComponent::HalfDamage { damage } => {
-                let dmg = (damage.roll() as f32 / 2.0).floor() as i32;
+            ActionComponent::HalfDamage { rolled, .. } => {
+                let dmg = *rolled;
                 target.decrease_hp(dmg);
-                eprintln!("Dammage {dmg} -> hp target : {}", target.hp());
+                eprintln!("HalfDmg {dmg} -> hp target : {}", target.hp());
             }
             ActionComponent::Condition {
                 condition,
@@ -242,6 +272,7 @@ impl ActionComponent {
         }
     }
     pub fn target_count(&self) -> usize {
+        //TODO Only condition hold target counts but that doesn't make sense. Move it elsewhere.
         match &self {
             ActionComponent::Condition { target_count, .. } => *target_count as usize,
             ActionComponent::Damage { .. } | ActionComponent::HalfDamage { .. } => 1, //TODO does that makes sense?
@@ -273,7 +304,10 @@ impl ActionStruct {
                 target_count,
                 name,
             } => {
-                let dmg = ActionComponent::Damage { damage: *dammage };
+                let dmg = ActionComponent::Damage {
+                    damage: *dammage,
+                    rolled: 0,
+                };
                 let component = ActionComponent::Condition {
                     condition: ActionCondition::HitCondition {
                         attack_modifier: *attack_modifier,
@@ -299,7 +333,10 @@ impl ActionStruct {
                             target_count,
                             ..
                         } => {
-                            let dmg = ActionComponent::Damage { damage: *dammage };
+                            let dmg = ActionComponent::Damage {
+                                damage: *dammage,
+                                rolled: 0,
+                            };
                             let component = ActionComponent::Condition {
                                 condition: ActionCondition::HitCondition {
                                     attack_modifier: *attack_modifier,
@@ -342,7 +379,7 @@ impl ActionStruct {
                         .upcast(upcast_lvl)
                         .build();
                     let mut name = name.clone();
-                    let lvl = upcast_lvl+lowest;
+                    let lvl = upcast_lvl + lowest;
                     name.push_str(" ");
                     name.push_str(&lvl.to_string());
                     ret.insert(name, action);
@@ -359,6 +396,11 @@ impl ActionStruct {
     }
     pub fn add_component(&mut self, component: ActionComponent) {
         self.components.push(component);
+    }
+    pub fn ready_for_apply(&mut self) {
+        for comp in &mut self.components {
+            comp.ready_for_apply();
+        }
     }
     pub fn average_dammage(&self) -> f32 {
         self.components

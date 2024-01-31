@@ -33,7 +33,8 @@ impl Fight {
                     }
                 }
 
-                if let Some(action) = action {
+                if let Some(mut action) = action {
+                    action.ready_for_apply();
                     for act in action.get_components() {
                         let e = self.entities.get(idx).unwrap().borrow();
                         let targets = e.get_targets(self, act);
