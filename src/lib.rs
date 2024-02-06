@@ -9,3 +9,4 @@ pub mod formula;
 pub mod template;
 pub mod float;
 pub mod ability;
+pub mod tag;
