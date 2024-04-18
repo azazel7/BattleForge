@@ -2,7 +2,9 @@ use core::panic;
 use std::collections::HashMap;
 
 use crate::ability::Ability;
+use crate::fight::Fight;
 use crate::formula::Formula;
+use crate::modifier::ModifierType;
 use crate::monster::*;
 use crate::resource::Charge;
 use crate::resource::Resource;
@@ -44,30 +46,28 @@ impl ActionCondition {
             _ => {}
         }
     }
-    fn pass(&self, target: &mut Monster) -> bool {
+    fn pass(&self, fight: &mut Fight, source_id : i32, target_id: i32) -> bool {
         match self {
             Self::True => true,
             Self::False => false,
             Self::SaveCondition { save_dc, ability } => {
-                let mut rng = rand::thread_rng();
-                let die = Uniform::from(1..=20);
-                let throw = die.sample(&mut rng);
-                let save_mod = target.save_mod(*ability);
-                let hit = throw + save_mod;
-                eprintln!("Save {throw}+{save_mod} = {hit} (DC {save_dc})");
+                let save_mod = fight.get_modifier(target_id, ModifierType::Save(*ability));
+                let hit = save_mod.roll();
+                eprintln!("Save {hit} (DC {save_dc})");
                 hit >= *save_dc
             }
             Self::HitCondition { attack_modifier } => {
-                //TODO roll a 1d20
-                let mut rng = rand::thread_rng();
-                let die = Uniform::from(1..=20);
-                let throw = die.sample(&mut rng);
+                let mod_attacked = fight.get_modifier(target_id, ModifierType::Attacked);
+                let mod_attack = fight.get_modifier(source_id, ModifierType::Attack);
+                let mod_final = mod_attacked + mod_attack;
+                let throw = mod_final.roll();
                 let hit = throw + attack_modifier;
+                let ac = fight.get_ac(target_id);
                 eprintln!(
                     "Roll {throw}+{attack_modifier} = {hit} (AC {})",
-                    target.ac()
+                    ac
                 );
-                hit >= target.ac()
+                hit >= ac
             }
         }
     }
@@ -99,6 +99,7 @@ pub enum ActionComponent {
         #[serde(default)]
         rolled: i32,
     },
+    //TODO add effect
 }
 
 impl ActionComponent {
@@ -214,7 +215,7 @@ impl ActionComponent {
         }
     }
     pub fn ready_for_apply(&mut self) {
-        //ready_for_apply is useful to pre-roll dices to Fireball doesn't inflict different amount
+        //ready_for_apply is useful to pre-roll dices so Fireball doesn't inflict different amount
         //of damage to each target.
         //TODO HalfDamage and Damage do not have synchronized rolled :'(.
         match self {
@@ -238,18 +239,20 @@ impl ActionComponent {
             ActionComponent::Nothing => {}
         }
     }
-    pub fn apply(&self, target: &mut Monster) {
+    pub fn apply(&self, source_id: i32, target_id: i32, fight: &mut Fight) {
         //Apply recursively all components to a target.
         match &self {
             ActionComponent::Damage { rolled, .. } => {
                 let dmg = *rolled;
-                target.decrease_hp(dmg);
-                eprintln!("Dammage {dmg} -> hp target : {}", target.hp());
+                fight.decrease_hp(target_id, dmg);
+                let hp = fight.get_hp(target_id);
+                eprintln!("Dammage {dmg} -> hp target : {}", hp);
             }
             ActionComponent::HalfDamage { rolled, .. } => {
                 let dmg = *rolled;
-                target.decrease_hp(dmg);
-                eprintln!("HalfDmg {dmg} -> hp target : {}", target.hp());
+                fight.decrease_hp(target_id, dmg);
+                let hp = fight.get_hp(target_id);
+                eprintln!("HalfDmg {dmg} -> hp target : {}", hp);
             }
             ActionComponent::Condition {
                 condition,
@@ -257,15 +260,15 @@ impl ActionComponent {
                 failure,
                 ..
             } => {
-                if condition.pass(target) {
-                    success.apply(target);
+                if condition.pass(fight, source_id, target_id) {
+                    success.apply(source_id, target_id, fight);
                 } else {
-                    failure.apply(target);
+                    failure.apply(source_id, target_id, fight);
                 }
             }
             ActionComponent::MultiComponent { next } => {
                 for comp in next {
-                    comp.apply(target);
+                    comp.apply(source_id, target_id, fight);
                 }
             }
             ActionComponent::Nothing => {}

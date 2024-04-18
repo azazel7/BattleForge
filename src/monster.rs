@@ -8,6 +8,7 @@ use std::mem;
 
 #[derive(Default, Clone, Debug)]
 pub struct Monster {
+    id: i32,
     name: String,
     entity_stats: MonsterStats,
     team_id: u8,
@@ -31,6 +32,7 @@ impl Monster {
             });
         //Build the monster
         let mut monster = Self {
+            id: 0,
             name: template.name.clone(),
             entity_stats: MonsterStats::from_template(builder, &template.entity_stats),
             team_id: 0,
@@ -72,6 +74,12 @@ impl Monster {
     pub fn set_hp(&mut self, hp: i32) {
         self.entity_stats.set_hp(hp);
         self.entity_stats.set_max_hp(hp);
+    }
+    pub fn set_id(&mut self, id: i32) {
+        self.id = id;
+    }
+    pub fn id(&self) -> i32 {
+        self.id
     }
     pub fn decrease_hp(&mut self, amount: i32) {
         self.entity_stats.decrease_hp(amount);
