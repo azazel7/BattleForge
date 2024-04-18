@@ -31,6 +31,11 @@ impl Formula {
         self.dice.average_roll() + self.fixed as f32
     }
 }
+impl From<i32> for Formula {
+    fn from(value: i32) -> Self {
+        Self { dice: Dice::default(), fixed: value }
+    }
+}
 impl From<&str> for Formula {
     fn from(item: &str) -> Self {
         /*
