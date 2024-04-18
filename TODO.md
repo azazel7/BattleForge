@@ -1,3 +1,5 @@
+- [ ] Make template of effect.
+- [ ] Make a file of effect conditions.
 - [x] Include dices in dammages.
 - [x] Build entities from template.
 - [ ] Use a database of entities.
@@ -6,10 +8,13 @@
 - [ ] Make recursive actions (to have the condition hit/save separated from multiple effect like damage+condition).
     - [x] Action should contain a list of other actions
     - [x] Make conditionnal ActionComponent
+    - [ ] On spell, there is a shared damage, where as on hit spell, it's one roll per hit.
     - [ ] How to propagate upcast to recursive conditions?
     - [ ] How to compute the amount of targets per effects?
     - [ ] How ice knife second effect (cold damage explosion) is suppose to keep at least the previous target?
-- [ ] Add name to actions.
+- [x] Add name to actions.
+- [ ] Handle healing spells.
+- [ ] Handle spells with zero targets.
 - [x] Have capacities that can be used a limited amount of time (potion, object)
 - [x] Include spell + spell slot limit
 - [x] Modify the entitie that take an action
